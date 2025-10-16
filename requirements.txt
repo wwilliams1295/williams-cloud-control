@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+requests
+python-multipart
+python-dotenv
+openai
+beautifulsoup4
+duckduckgo-search
+openpyxl
+pywin32; platform_system=="Windows"

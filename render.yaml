@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: williams-cloud-control
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn cloud:app --host 0.0.0.0 --port 10000"
+    plan: free
+    envVars:
+      - key: DISPATCH_SECRET
+        value: dev-secret
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: william.c.williams@outlook.com
+      - key: EMAIL_WHITELIST
+        value: william.c.williams@outlook.com
+      - key: SMTP_HOST
+        value: smtp.sendgrid.net
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USER
+        value: apikey
+      - key: SMTP_PASS
+        sync: false
+      - key: MAC_AGENT_URL
+        value: http://127.0.0.1:8787

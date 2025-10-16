@@ -1,0 +1,12 @@
+{
+  "aliases": {
+    "excel_create": {
+      "body": "excel create name:'Quick Sheet' cols:'Month;Region;Amount'",
+      "code": "ETSM",
+      "created": "Wednesday, October 15, 2025 08:41 PM CDT"
+    }
+  },
+  "codes": {
+    "ETSM": "excel_create"
+  }
+}

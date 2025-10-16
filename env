@@ -1,0 +1,4 @@
+DISPATCH_SECRET=dev-secret
+MAC_AGENT_URL=http://localhost:8787
+# If you'll run a Windows agent:
+# WIN_AGENT_URL=http://192.168.1.50:8788

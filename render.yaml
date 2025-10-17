@@ -2,25 +2,42 @@ services:
   - type: web
     name: williams-cloud-control
     env: python
+    plan: free
     buildCommand: "pip install -r requirements.txt"
     startCommand: "uvicorn cloud:app --host 0.0.0.0 --port $PORT"
-    plan: free
     envVars:
       - key: DISPATCH_SECRET
         value: dev-secret
-      - key: OPENAI_API_KEY
+
+      - key: OPENAI_API_KEY          # 🔒 stored securely in Render UI
         sync: false
-      - key: EMAIL_FROM               # <-- make sure this is VERIFIED
-        value: jarvis@williamscloudcontrol.com
+
+      - key: SEC_USER_AGENT          # required for SEC EDGAR API
+        value: "JarvisCloudBot/2.0 (contact: william.c.williams@outlook.com)"
+
+      - key: APP_TIMEZONE
+        value: "America/Chicago"
+
+      - key: EMAIL_FROM
+        value: "jarvis@williamscloudcontrol.com"
+
       - key: EMAIL_WHITELIST
-        value: william.c.williams@outlook.com
+        value: "william.c.williams@outlook.com"
+
       - key: SMTP_HOST
-        value: smtp.sendgrid.net
+        value: "smtp.sendgrid.net"
+
       - key: SMTP_PORT
-        value: 587
+        value: "587"
+
       - key: SMTP_USER
-        value: apikey
-      - key: SMTP_PASS
+        value: "apikey"
+
+      - key: SMTP_PASS               # 🔒 store in Render UI only
         sync: false
+
       - key: MAC_AGENT_URL
-        value: http://127.0.0.1:8787
+        value: "http://127.0.0.1:8787"
+
+      - key: COMPANY_ADDRESS
+        value: "Williams Cloud Systems — Houston, TX"

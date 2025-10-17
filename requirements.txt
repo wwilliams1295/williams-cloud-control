@@ -11,3 +11,10 @@ python-pptx
 Pillow
 lxml
 pywin32; platform_system=="Windows"
+feedparser
+sec-edgar-downloader
+pandas
+msal
+google-api-python-client
+google-auth
+google-auth-oauthlib

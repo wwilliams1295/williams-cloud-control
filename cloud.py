@@ -494,6 +494,22 @@ def process_message(sender_id: str, body: str, channel: str = "sms") -> str:
             err = f"{e}\n{traceback.format_exc(limit=1)}"
             out = f"Agent exception: {err}"
             return (greeting + "\n\n" + out) if greeting else out
+        # SEC / EDGAR analyzer (natural language)
+    if any(x in lower for x in ["sec ", "edgar ", "10-k", "10q", "10-q", "filing "]):
+        try:
+            # Try to detect ticker and form type automatically
+            m = re.search(r"\b([A-Z]{1,5})\b", s.upper())
+            ticker = m.group(1) if m else ""
+            form_type = "10-Q" if "10-Q" in s.upper() or "10Q" in s.upper() else "10-K"
+            if not ticker:
+                out = "Please specify a ticker symbol (e.g., AAPL or XOM)."
+            else:
+                out = f"📊 Fetching {form_type} for {ticker} from EDGAR...\n\n" + summarize_filing(ticker, form_type=form_type)
+            remember(s, out)
+            return (greeting + "\n\n" + out) if greeting else out
+        except Exception as e:
+            err = f"SEC lookup error: {e}\n{traceback.format_exc(limit=1)}"
+            return (greeting + "\n\n" + err) if greeting else err
 
     # Fallback
     out = "Command not recognized."
@@ -552,3 +568,120 @@ async def email_inbound(req: Request):
     attachments = _extract_paths(reply)
     sent  = send_email(sender_addr, f"[Williams Cloud] Re: {subject or 'Command'}", reply, attachments=attachments)
     return {"ok": True, "sent": sent}
+# ============== SEC EDGAR FINANCIAL ANALYZER ==============
+import pandas as pd
+
+def fetch_latest_filing_url(ticker: str, form_type: str = "10-K") -> str:
+    """Return the main HTML URL for the latest 10-K or 10-Q filing."""
+    try:
+        headers = {"User-Agent": os.getenv("SEC_USER_AGENT", "JarvisCloudBot/2.0 (contact: william.c.williams@outlook.com)")}
+        ticker = ticker.upper().strip()
+
+        # Lookup CIK
+        data = requests.get("https://www.sec.gov/files/company_tickers.json", headers=headers, timeout=10).json()
+        cik = None
+        for v in data.values():
+            if v["ticker"].upper() == ticker:
+                cik = str(v["cik_str"]).zfill(10)
+                break
+        if not cik:
+            return ""
+
+        # Get recent submissions
+        sub = requests.get(f"https://data.sec.gov/submissions/CIK{cik}.json", headers=headers, timeout=10).json()
+        rec = sub.get("filings", {}).get("recent", {})
+        for form, acc in zip(rec["form"], rec["accessionNumber"]):
+            if form == form_type:
+                base = f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{acc.replace('-','')}/{acc}-index.html"
+                return base
+        return ""
+    except Exception:
+        return ""
+
+
+def parse_filing_tables(url: str) -> pd.DataFrame:
+    """Extract numerical tables (Income Statement, Balance Sheet, etc.) from an HTML filing."""
+    headers = {"User-Agent": os.getenv("SEC_USER_AGENT", "JarvisCloudBot/2.0 (contact: william.c.williams@outlook.com)")}
+    r = requests.get(url, headers=headers, timeout=15)
+    soup = BeautifulSoup(r.text, "html.parser")
+    tables = soup.find_all("table")
+    dfs = []
+    for t in tables:
+        try:
+            df = pd.read_html(str(t))[0]
+            if df.shape[1] >= 2:
+                dfs.append(df)
+        except Exception:
+            continue
+    return pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
+
+
+def extract_financial_highlights(df: pd.DataFrame) -> dict:
+    """Search the parsed DataFrame for key metrics."""
+    metrics = {
+        "revenue": None,
+        "operating_income": None,
+        "net_income": None,
+        "total_assets": None,
+        "total_liabilities": None,
+        "shareholders_equity": None,
+    }
+    if df.empty:
+        return metrics
+
+    # Normalize text
+    df.columns = [str(c).lower() for c in df.columns]
+    for col in df.columns:
+        if "description" in col or "item" in col or "account" in col:
+            key_col = col
+            break
+    else:
+        key_col = df.columns[0]
+
+    for i, row in df.iterrows():
+        text = str(row[key_col]).lower()
+        valcols = [c for c in df.columns if any(x in c for x in ["amount", "value", "usd", "dollar", "current", "year"])]
+        vals = [v for c, v in row.items() if c in valcols and isinstance(v, (int, float, str))]
+        val = None
+        if vals:
+            try:
+                val = float(str(vals[-1]).replace(",", "").replace("(", "-").replace(")", ""))
+            except Exception:
+                pass
+        if not val:
+            continue
+        if "revenue" in text or "sales" in text:
+            metrics["revenue"] = val
+        elif "operating income" in text or "operating profit" in text:
+            metrics["operating_income"] = val
+        elif "net income" in text and "comprehensive" not in text:
+            metrics["net_income"] = val
+        elif "total assets" in text:
+            metrics["total_assets"] = val
+        elif "total liabilit" in text:
+            metrics["total_liabilities"] = val
+        elif "stockholders" in text or "shareholders" in text:
+            metrics["shareholders_equity"] = val
+    return metrics
+
+
+def summarize_filing(ticker: str, form_type: str = "10-K") -> str:
+    """Fetch and summarize financials with GPT commentary."""
+    try:
+        url = fetch_latest_filing_url(ticker, form_type)
+        if not url:
+            return f"❌ Could not locate latest {form_type} for {ticker}."
+
+        df = parse_filing_tables(url)
+        metrics = extract_financial_highlights(df)
+
+        summary_prompt = (
+            f"Ticker: {ticker}\n"
+            f"Latest {form_type} filing: {url}\n\n"
+            f"Financial snapshot (raw):\n{json.dumps(metrics, indent=2)}\n\n"
+            "Please summarize the revenue growth or decline, key balance sheet changes, "
+            "and any notable trends in 5 concise bullets."
+        )
+        return ask_gpt(summary_prompt)
+    except Exception as e:
+        return f"SEC summary error: {e}"

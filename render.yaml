@@ -3,15 +3,15 @@ services:
     name: williams-cloud-control
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "uvicorn cloud:app --host 0.0.0.0 --port 10000"
+    startCommand: "uvicorn cloud:app --host 0.0.0.0 --port $PORT"
     plan: free
     envVars:
       - key: DISPATCH_SECRET
         value: dev-secret
       - key: OPENAI_API_KEY
         sync: false
-      - key: EMAIL_FROM
-        value: william.c.williams@outlook.com
+      - key: EMAIL_FROM               # <-- make sure this is VERIFIED
+        value: jarvis@williamscloudcontrol.com
       - key: EMAIL_WHITELIST
         value: william.c.williams@outlook.com
       - key: SMTP_HOST

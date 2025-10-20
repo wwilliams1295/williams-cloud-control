@@ -501,6 +501,7 @@ for n in _env_nums:
 # Hardcode authorized users
 _raw_allowed_numbers["+15613891295"] = {"name": "Chris Williams", "role": "admin"}
 _raw_allowed_numbers["+15613716077"] = {"name": "Bill", "role": "admin"}  # 561-371-6077
+_raw_allowed_numbers["+19177194526"] = {"name": "Google Voice User", "role": "admin"}  # 917-719-4526
 _raw_allowed_numbers["+6822055698"] = {
     "name": "Angry Munch",
     "role": "admin",

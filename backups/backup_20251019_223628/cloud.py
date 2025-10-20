@@ -72,14 +72,6 @@ except Exception:
 
 # ==================== APP INIT ====================
 load_dotenv()
-
-# Setup Gmail credentials for Render deployment
-try:
-    from scripts.setup_gmail_credentials import setup_gmail_credentials
-    setup_gmail_credentials()
-except Exception as e:
-    print(f"Warning: Could not setup Gmail credentials: {e}")
-
 app = FastAPI()
 
 # ==================== CONFIG ======================
@@ -222,35 +214,21 @@ def extract_phone_from_gv_headers(
 ) -> Optional[str]:
     """
     GV local-part like: 19177194526.15613891295.CRmvhhlGR7
-    Extract sender's phone number from subject line first, then from email headers.
+    Prefer a token whose last10 matches ALLOWED_NUMBERS_LAST10.
     """
     headers = headers or {}
     subject = subject or ""
     body = body or ""
 
-    # First, try to extract phone number from subject line
-    # Subject format: "New text message from (561) 389-1295"
-    subject_match = re.search(r'\((\d{3})\)\s*(\d{3})-(\d{4})', subject)
-    if subject_match:
-        area_code, prefix, number = subject_match.groups()
-        phone_str = f"+1{area_code}{prefix}{number}"
-        normalized = normalize_phone(phone_str)
-        if normalized:
-            return normalized
-
     def pick_from_local(local: str) -> Optional[str]:
         if not local:
             return None
         tokens = [t for t in local.split(".") if t]
-        # First, look for sender numbers (not the GV number)
         for tok in tokens:
             n = normalize_phone(tok)
             if not n:
                 continue
             f10 = last10_digits(n)
-            # Skip if this is the GV number itself
-            if f10 == "9177194526":
-                continue
             if f10 and f10 in ALLOWED_NUMBERS_LAST10:
                 return n
         for tok in tokens:
@@ -523,7 +501,6 @@ for n in _env_nums:
 # Hardcode authorized users
 _raw_allowed_numbers["+15613891295"] = {"name": "Chris Williams", "role": "admin"}
 _raw_allowed_numbers["+15613716077"] = {"name": "Bill", "role": "admin"}  # 561-371-6077
-_raw_allowed_numbers["+19177194526"] = {"name": "Google Voice User", "role": "admin"}  # 917-719-4526
 _raw_allowed_numbers["+6822055698"] = {
     "name": "Angry Munch",
     "role": "admin",
@@ -1630,26 +1607,6 @@ def gmail_once() -> Dict[str, Any]:
         return {"ok": True}
     except Exception as e:
         return {"ok": False, "error": str(e)}
-
-@app.get("/debug/gmail_status")
-def gmail_status() -> Dict[str, Any]:
-    """Check Gmail integration status."""
-    try:
-        svc = _gmail_service()
-        msgs = _gmail_list_unread_gv(svc)
-        return {
-            "status": "success",
-            "gmail_connected": True,
-            "unread_messages": len(msgs),
-            "google_ok": _GOOGLE_OK
-        }
-    except Exception as e:
-        return {
-            "status": "error", 
-            "message": str(e),
-            "gmail_connected": False,
-            "google_ok": _GOOGLE_OK
-        }
 
 
 # ==================== DEBUG: GV simulator =============

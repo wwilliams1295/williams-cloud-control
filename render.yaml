@@ -32,6 +32,24 @@ services:
         value: "sonar"
       - key: PPLX_MAX_TOKENS
         value: "700"
+      - key: DEBUG_LOG
+        value: "1"
+      - key: POLL_SECONDS
+        value: "30"
+      - key: GMAIL_QUERY
+        value: "in:inbox is:unread newer_than:7d (from:@txt.voice.google.com OR (from:voice-noreply@google.com subject:\"New message\"))"
+      - key: GV_HARD_IGNORE_SETTINGS
+        value: "1"
+      - key: GV_IGNORE_ADMIN
+        value: "1"
+      - key: ALLOWED_NUMBERS
+        value: "+15613891295,+15613716077,+19177194526,+16822055698"
+      - key: ALLOWED_EMAILS
+        value: "william.c.williams@outlook.com"
+      - key: GMAIL_CLIENT_SECRET_JSON
+        sync: false
+      - key: GMAIL_TOKEN_JSON
+        sync: false
 
 
 

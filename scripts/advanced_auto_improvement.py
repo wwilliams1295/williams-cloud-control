@@ -353,8 +353,8 @@ class ImprovementGenerator:
     """Generates specific improvements based on analysis and ideas."""
     
     def __init__(self):
-        self.settings = get_settings()
-        
+        # Settings removed - using environment variables directly
+        pass
     async def generate_improvement(self, idea: Dict[str, Any], analysis: Dict[str, Any]) -> Dict[str, Any]:
         """Generate a specific improvement based on an idea and analysis."""
         

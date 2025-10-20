@@ -19,8 +19,7 @@ from typing import Dict, Any, List, Optional
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config.settings_simple import get_settings
-from agent_v2 import superchat
+from agent import superchat
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +27,6 @@ class CodeImplementer:
     """Actually implements AI-generated improvements in the codebase."""
     
     def __init__(self):
-        self.settings = get_settings()
         self.project_root = Path(__file__).parent.parent
         self.backup_dir = self.project_root / "backups" / f"backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         

@@ -75,12 +75,34 @@ load_dotenv()
 
 # Setup Gmail credentials for Render deployment
 try:
-    from scripts.setup_gmail_credentials import setup_gmail_credentials
-    setup_gmail_credentials()
+    import os
+    import json
+    
+    # Check if we're on Render and have Gmail credentials in environment
+    if os.getenv('RENDER') and os.getenv('GMAIL_CLIENT_SECRET_JSON') and os.getenv('GMAIL_TOKEN_JSON'):
+        print("Setting up Gmail credentials from environment variables...")
+        
+        # Parse and save client_secret.json
+        client_secret_data = json.loads(os.getenv('GMAIL_CLIENT_SECRET_JSON'))
+        with open('client_secret.json', 'w') as f:
+            json.dump(client_secret_data, f)
+        
+        # Parse and save token.json
+        token_data = json.loads(os.getenv('GMAIL_TOKEN_JSON'))
+        with open('token.json', 'w') as f:
+            json.dump(token_data, f)
+        
+        print("Gmail credentials set up successfully")
+    else:
+        print("Gmail credentials not found in environment variables")
 except Exception as e:
     print(f"Warning: Could not setup Gmail credentials: {e}")
 
 app = FastAPI()
+
+@app.get("/")
+def root():
+    return {"message": "Jarvis AI Assistant is running", "status": "ok"}
 
 # ==================== CONFIG ======================
 SECRET: str = os.getenv("DISPATCH_SECRET", "dev-secret")

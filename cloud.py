@@ -1150,7 +1150,6 @@ def process_message(sender_id: str, body: str, channel: str = "sms") -> str:
     
     if lower in {"what files are on server", "list files", "show files"}:
         try:
-            import os
             main_files = [f for f in os.listdir('.') if f.endswith('.py') and f not in ['test_app.py']]
             plugin_files = []
             if os.path.exists('plugins/'):
@@ -1178,7 +1177,6 @@ def process_message(sender_id: str, body: str, channel: str = "sms") -> str:
     
     if lower in {"system status", "status report", "health check"}:
         try:
-            import os
             status = []
             status.append("🟢 Jarvis AI Assistant - Online")
             status.append(f"📁 Working directory: {os.getcwd()}")

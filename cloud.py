@@ -55,6 +55,9 @@ from email import encoders
 # LLM router (your existing)
 from agent import superchat
 
+# Memory system
+from memory_system import get_memory, store_conversation, get_conversation_context
+
 # Optional (SEC / data)
 import pandas as pd
 from collections import deque
@@ -706,7 +709,7 @@ def memory_text() -> str:
 
 
 # ==================== LLM HELPERS ==================
-async def ask_llm_async(prompt: str, name: str = "Operator") -> str:
+async def ask_llm_async(prompt: str, name: str = "Operator", user_id: str = None) -> str:
     # Use the enhanced system context from agent.py
     from agent import get_system_context
     system = get_system_context()
@@ -714,12 +717,19 @@ async def ask_llm_async(prompt: str, name: str = "Operator") -> str:
     # Add SMS-specific formatting instructions
     system += "\n\nFor SMS responses: Keep replies to 1-4 short lines, conversational and direct, but detailed and sophisticated. Do NOT include email headers like Subject/To/From or long salutations."
     
-    formatted_prompt = f"{prompt.strip()}\n\n(Operator: {name})"
+    # Add conversation context if user_id provided
+    context = ""
+    if user_id:
+        conversation_context = get_conversation_context(user_id, max_context=3)
+        if conversation_context:
+            context = f"\n\nPrevious conversation context:\n{conversation_context}\n"
+    
+    formatted_prompt = f"{prompt.strip()}{context}\n\n(Operator: {name})"
     return await superchat(formatted_prompt, system=system)
 
 
-def ask_llm(prompt: str, name: str = "Operator") -> str:
-    coro = ask_llm_async(prompt, name)
+def ask_llm(prompt: str, name: str = "Operator", user_id: str = None) -> str:
+    coro = ask_llm_async(prompt, name, user_id)
     try:
         asyncio.get_running_loop()
     except RuntimeError:
@@ -1187,9 +1197,87 @@ def process_message(sender_id: str, body: str, channel: str = "sms") -> str:
             plugins = _list_plugins()
             status.append(f"🔌 Plugins loaded: {len(plugins)}")
             
+            # Check memory stats
+            memory = get_memory()
+            memory_stats = memory.get_system_stats()
+            status.append(f"🧠 Memory: {memory_stats.get('total_conversations', 0)} conversations, {memory_stats.get('unique_users', 0)} users")
+            
             return finish("\n".join(status))
         except Exception as e:
             return finish(f"Status check error: {e}")
+    
+    # Memory management commands
+    if lower in {"memory stats", "conversation stats", "memory info"}:
+        try:
+            memory = get_memory()
+            stats = memory.get_system_stats()
+            user_stats = memory.get_user_stats(sender_id)
+            
+            response = []
+            response.append("🧠 Memory Statistics:")
+            response.append(f"📊 Total conversations: {stats.get('total_conversations', 0)}")
+            response.append(f"👥 Unique users: {stats.get('unique_users', 0)}")
+            response.append(f"💾 Cache size: {stats.get('cache_size', 0)}")
+            response.append(f"")
+            response.append(f"👤 Your conversations: {user_stats.get('total_conversations', 0)}")
+            if user_stats.get('first_conversation'):
+                first_time = datetime.fromtimestamp(user_stats['first_conversation']).strftime('%Y-%m-%d %H:%M')
+                response.append(f"📅 First conversation: {first_time}")
+            if user_stats.get('last_conversation'):
+                last_time = datetime.fromtimestamp(user_stats['last_conversation']).strftime('%Y-%m-%d %H:%M')
+                response.append(f"📅 Last conversation: {last_time}")
+            
+            return finish("\n".join(response))
+        except Exception as e:
+            return finish(f"Memory stats error: {e}")
+    
+    if lower.startswith("search memory") or lower.startswith("find conversation"):
+        try:
+            query = re.sub(r"^(search memory|find conversation)\s*", "", s, flags=re.I).strip()
+            if not query:
+                return finish("Please provide a search term. Example: 'search memory calendar'")
+            
+            memory = get_memory()
+            results = memory.search_conversations(query, user_id=sender_id, limit=5)
+            
+            if not results:
+                return finish(f"No conversations found matching '{query}'")
+            
+            response = [f"🔍 Found {len(results)} conversations matching '{query}':"]
+            for i, result in enumerate(results[:3], 1):
+                timestamp = datetime.fromtimestamp(result['timestamp']).strftime('%m-%d %H:%M')
+                response.append(f"{i}. [{timestamp}] {result['message'][:50]}...")
+            
+            return finish("\n".join(response))
+        except Exception as e:
+            return finish(f"Memory search error: {e}")
+    
+    if lower in {"clear my memory", "delete my conversations", "reset memory"}:
+        try:
+            memory = get_memory()
+            deleted_count = memory.clear_user_conversations(sender_id)
+            return finish(f"🗑️ Cleared {deleted_count} of your conversations from memory.")
+        except Exception as e:
+            return finish(f"Memory clear error: {e}")
+    
+    if lower.startswith("show conversation") or lower.startswith("conversation history"):
+        try:
+            memory = get_memory()
+            conversations = memory.get_conversations(sender_id, limit=5)
+            
+            if not conversations:
+                return finish("No conversation history found.")
+            
+            response = ["📜 Recent conversation history:"]
+            for conv in conversations:
+                timestamp = datetime.fromtimestamp(conv['timestamp']).strftime('%m-%d %H:%M')
+                response.append(f"[{timestamp}] You: {conv['message'][:40]}...")
+                response.append(f"[{timestamp}] AI: {conv['response'][:40]}...")
+                response.append("")
+            
+            return finish("\n".join(response))
+        except Exception as e:
+            return finish(f"Conversation history error: {e}")
 
     # === Fast-path greetings (ALWAYS reply) ===
     if lower in {"hi", "hello", "hey", "yo"}:
@@ -1298,7 +1386,15 @@ def process_message(sender_id: str, body: str, channel: str = "sms") -> str:
                 "Cite sources inline."
             )
 
-        ai_reply = ask_llm(cleaned or "Status report.", name=name)
+        ai_reply = ask_llm(cleaned or "Status report.", name=name, user_id=sender_id)
+        
+        # Store conversation in memory
+        store_conversation(sender_id, channel, cleaned or "Status report.", ai_reply, {
+            'name': name,
+            'timestamp': time.time(),
+            'channel': channel
+        })
+        
         remember(cleaned, ai_reply)
         return finish(ai_reply)
 

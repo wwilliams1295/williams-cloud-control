@@ -707,13 +707,13 @@ def memory_text() -> str:
 
 # ==================== LLM HELPERS ==================
 async def ask_llm_async(prompt: str, name: str = "Operator") -> str:
-    # NOTE: steer SMS away from email formatting
-    system = (
-        "You are Jarvis, the Williams Secured Cloud Control Server AI (codename Echo-Nine). "
-        "For SMS, reply in 1–4 short lines, conversational and direct, but also detailed and sophisticated. "
-        "Do NOT include email headers like Subject/To/From or long salutations. "
-        "For documents/decks, you may switch to a formal executive style with premium bullets."
-    )
+    # Use the enhanced system context from agent.py
+    from agent import get_system_context
+    system = get_system_context()
+    
+    # Add SMS-specific formatting instructions
+    system += "\n\nFor SMS responses: Keep replies to 1-4 short lines, conversational and direct, but detailed and sophisticated. Do NOT include email headers like Subject/To/From or long salutations."
+    
     formatted_prompt = f"{prompt.strip()}\n\n(Operator: {name})"
     return await superchat(formatted_prompt, system=system)
 

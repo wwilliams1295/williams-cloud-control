@@ -1,0 +1,22 @@
+{
+  "code_analyzer": {
+    "enabled": true,
+    "priority": 1
+  },
+  "test_generator": {
+    "enabled": true,
+    "priority": 2
+  },
+  "documentation_generator": {
+    "enabled": true,
+    "priority": 3
+  },
+  "security_scanner": {
+    "enabled": true,
+    "priority": 4
+  },
+  "performance_optimizer": {
+    "enabled": true,
+    "priority": 5
+  }
+}

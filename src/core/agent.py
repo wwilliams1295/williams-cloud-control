@@ -690,6 +690,9 @@ def get_system_context() -> str:
     
     # Get available plugins with descriptions
     try:
+        import sys
+        import os
+        sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'api'))
         from cloud import _list_plugins
         plugins = _list_plugins()
         plugin_info = f"Available plugins: {', '.join(plugins)}"
@@ -698,16 +701,18 @@ def get_system_context() -> str:
     
     # Get detailed plugin information
     plugin_details = []
-    if os.path.exists('plugins/'):
-        for plugin_file in os.listdir('plugins/'):
+    plugins_path = os.path.join(os.path.dirname(__file__), '..', 'plugins')
+    if os.path.exists(plugins_path):
+        for plugin_file in os.listdir(plugins_path):
             if plugin_file.endswith('.py') and plugin_file != '__init__.py':
                 plugin_name = plugin_file.replace('.py', '')
                 plugin_details.append(f"- {plugin_name}: {_get_plugin_description(plugin_name)}")
     
     # Get auto-improvement scripts
     auto_improvement_scripts = []
-    if os.path.exists('scripts/'):
-        for script in os.listdir('scripts/'):
+    ai_scripts_path = os.path.join(os.path.dirname(__file__), '..', 'ai')
+    if os.path.exists(ai_scripts_path):
+        for script in os.listdir(ai_scripts_path):
             if script.endswith('.py') and 'improvement' in script.lower():
                 auto_improvement_scripts.append(script)
     

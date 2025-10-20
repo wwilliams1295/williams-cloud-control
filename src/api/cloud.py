@@ -53,10 +53,13 @@ from email.mime.base import MIMEBase
 from email import encoders
 
 # LLM router (your existing)
-from agent import superchat
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from core.agent import superchat
 
 # Memory system
-from memory_system import get_memory, store_conversation, get_conversation_context
+from memory.memory_system import get_memory, store_conversation, get_conversation_context
 
 # Optional (SEC / data)
 import pandas as pd
@@ -711,7 +714,7 @@ def memory_text() -> str:
 # ==================== LLM HELPERS ==================
 async def ask_llm_async(prompt: str, name: str = "Operator", user_id: str = None) -> str:
     # Use the enhanced system context from agent.py
-    from agent import get_system_context
+    from core.agent import get_system_context
     system = get_system_context()
     
     # Add SMS-specific formatting instructions

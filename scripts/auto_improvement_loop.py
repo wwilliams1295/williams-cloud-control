@@ -53,22 +53,34 @@ class AutoImprovementLoop:
                 logger.info("Skipping improvement cycle - cooldown period active")
                 return {"status": "skipped", "reason": "cooldown"}
             
-            # Run auto-improver
-            logger.info("Running auto-improver...")
-            improvement_result = await self._run_auto_improver()
+            # Try to run advanced improvement first (includes creative system)
+            logger.info("Attempting advanced improvement...")
+            advanced_result = await self._run_advanced_improvement()
             
-            # Run self-loop for additional improvements
-            logger.info("Running self-loop...")
-            self_loop_result = await self._run_self_loop()
-            
-            # Combine results
-            result = {
-                "status": "completed",
-                "timestamp": datetime.now().isoformat(),
-                "improvement_result": improvement_result,
-                "self_loop_result": self_loop_result,
-                "total_improvements": len(self.improvement_history)
-            }
+            if advanced_result.get("success", False):
+                logger.info("Advanced improvement successful")
+                result = {
+                    "status": "completed",
+                    "timestamp": datetime.now().isoformat(),
+                    "improvement_type": "advanced",
+                    "result": advanced_result,
+                    "total_improvements": len(self.improvement_history)
+                }
+            else:
+                # Fallback to basic improvement
+                logger.info("Falling back to basic improvement...")
+                improvement_result = await self._run_auto_improver()
+                self_loop_result = await self._run_self_loop()
+                
+                # Combine results
+                result = {
+                    "status": "completed",
+                    "timestamp": datetime.now().isoformat(),
+                    "improvement_type": "basic",
+                    "improvement_result": improvement_result,
+                    "self_loop_result": self_loop_result,
+                    "total_improvements": len(self.improvement_history)
+                }
             
             self.improvement_history.append(result)
             self.last_improvement = datetime.now()
@@ -138,6 +150,26 @@ class AutoImprovementLoop:
             }
         except Exception as e:
             logger.error(f"Error running self-loop: {e}")
+            return {"success": False, "error": str(e)}
+    
+    async def _run_advanced_improvement(self) -> Dict[str, Any]:
+        """Run advanced improvement system."""
+        try:
+            result = subprocess.run(  # nosec B603
+                [sys.executable, "scripts/advanced_auto_improvement.py", "--once"],
+                capture_output=True,
+                text=True,
+                cwd=Path(__file__).parent.parent
+            )
+            
+            return {
+                "success": result.returncode == 0,
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+                "returncode": result.returncode
+            }
+        except Exception as e:
+            logger.error(f"Error running advanced improvement: {e}")
             return {"success": False, "error": str(e)}
     
     async def run_continuous_loop(self):

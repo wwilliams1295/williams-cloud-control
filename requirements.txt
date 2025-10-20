@@ -1,20 +1,58 @@
-fastapi
-uvicorn[standard]
-requests
-python-multipart
-python-dotenv
-openai
-beautifulsoup4
-duckduckgo-search
-openpyxl
-python-pptx
-Pillow
-lxml
-pywin32; platform_system=="Windows"
-feedparser
-sec-edgar-downloader
-pandas
-msal
-google-api-python-client
-google-auth
-google-auth-oauthlib
+# --- API/App ---
+fastapi>=0.111,<1
+uvicorn[standard]>=0.30,<1
+httpx>=0.27,<1
+requests>=2.32,<3
+python-multipart>=0.0.9
+python-dotenv>=1.0
+
+# --- LLM/Search/Parsing ---
+openai>=1.51
+beautifulsoup4>=4.12
+duckduckgo-search>=6.3
+lxml>=5.3
+feedparser>=6.0
+
+# --- Data / Office docs ---
+pandas>=2.2
+openpyxl>=3.1
+python-pptx>=0.6.23
+Pillow>=10.4
+reportlab>=4.2   # for simple HTML→PDF builder
+
+# --- SEC / Finance ---
+sec-edgar-downloader>=5.0
+
+# --- Google / Microsoft / Cloud connectors ---
+msal>=1.28
+google-api-python-client>=2.142
+google-auth>=2.34
+google-auth-oauthlib>=1.2
+
+# --- DevOps / self-improver / tests / lint ---
+gitpython>=3.1
+pyyaml>=6.0
+pytest>=8.3
+pytest-asyncio>=0.21.0
+pytest-cov>=4.0.0
+ruff>=0.6
+black>=24.8
+mypy>=1.11
+bandit>=1.7
+safety>=2.0.0
+isort>=5.12.0
+flake8>=6.0.0
+
+# --- Configuration Management ---
+pydantic-settings>=2.0.0
+
+# --- Docker Support (optional) ---
+docker>=6.0.0
+
+# --- Cloud Storage Support ---
+boto3>=1.26.0
+google-cloud-storage>=2.10.0
+azure-storage-blob>=12.19.0
+
+# --- Windows-only (safe to ignore on macOS/Linux) ---
+pywin32; platform_system == "Windows"

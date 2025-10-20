@@ -1,0 +1,9 @@
+# Only lint our code, not deps or caches
+exclude = [
+  "venv", ".venv", ".env", ".git", "backups", "node_modules",
+  "**/__pycache__", "**/.mypy_cache", "**/.pytest_cache", "**/site-packages"
+]
+
+# Optional: keep the defaults but allow auto-fixes you want
+fix = true
+target-version = "py39"

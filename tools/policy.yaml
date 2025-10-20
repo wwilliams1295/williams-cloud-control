@@ -1,0 +1,20 @@
+allowed_paths:
+  - agent.py
+  - cloud.py
+  - functions.py
+  - mailer.py
+  - plugins/**
+  - tools/**
+  - tests/**
+allow_new_files: true
+max_changed_lines: 400
+forbidden_patterns:
+  - "eval("
+  - "exec("
+  - "os.system("
+  - "shell=True"         # prefer shell=False; let Bandit flag subprocess misuse
+required_checks:
+  - ruff
+  - pytest
+  - bandit
+  - mypy

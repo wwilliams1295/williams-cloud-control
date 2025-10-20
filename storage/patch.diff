@@ -1,0 +1,198 @@
+diff --git a/cloud.py b/cloud.py
+index 9d2f7ab..e6f4d7c 100644
+--- a/cloud.py
++++ b/cloud.py
+@@ -15,7 +15,7 @@ from fastapi import FastAPI, Request, HTTPException, Form, Body
+ from fastapi.responses import PlainTextResponse, JSONResponse
+ from fastapi.staticfiles import StaticFiles
+-from typing import Optional, List, Tuple, Dict
++from typing import Optional, List, Tuple, Dict, Any
+ import os
+ import json
+ import hmac
+@@ -666,7 +666,7 @@ def make_cloud_pptx(title: str, bullets_str: str) -> str:
+     ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+     safe = re.sub(r"[^A-Za-z0-9_\- ]", "_", title or "Auto Deck").strip().replace(" ", "_")
+-    path = CLOUD_OUT_DIR / f"{safe}-{ts}.pptx"
+-    prs.save(path)
++    path = CLOUD_OUT_DIR / f"{safe}-{ts}.pptx"
++    prs.save(str(path))
+     return str(path)
+ 
+ def exec_deck_command(s: str, to_win: bool = False) -> str:
+@@ -972,7 +972,7 @@ def process_message(sender_id: str, body: str, channel: str = "sms") -> str:
+     return finish("Command not recognized.")
+ 
+ # ==================== HEALTH ========================
+-@app.get("/health")
+-def health():
++@app.get("/health")
++def health() -> Dict[str, str]:
+     return {"ok": True, "time": now_str()}
+ 
+ # ==================== TOOLS: list & invoke ==========
+-@app.get("/tools")
+-def list_tools():
++@app.get("/tools")
++def list_tools() -> Dict[str, Any]:
+     return {"ok": True, "plugins": _list_plugins()}
+ 
+-@app.post("/tool")
+-async def run_tool(req: Request):
++@app.post("/tool")
++async def run_tool(req: Request) -> JSONResponse:
+     data = await req.json()
+     tool = data.get("tool")
+     args = data.get("args", {}) or {}
+@@ -999,8 +999,8 @@ async def run_tool(req: Request):
+ 
+ # ==================== TWILIO SMS (optional path) ====
+ # (Not required for GV/Gmail flow; kept for local sanity checks)
+-@app.post("/twilio/sms")
+-async def sms_in(req: Request):
++@app.post("/twilio/sms")
++async def sms_in(req: Request) -> PlainTextResponse:
+     try:
+         form   = dict(await req.form())
+         sender = (form.get("From") or "").strip()
+@@ -1019,9 +1019,9 @@ async def sms_in(req: Request):
+     return twiml(text_reply)
+ 
+ # ==================== EMAIL INBOUND (GV Gateway) ====
+-@app.post("/email/inbound")
+-async def email_inbound(req: Request):
+-    ctype = (req.headers.get("content-type") or "").lower()
++@app.post("/email/inbound")
++async def email_inbound(req: Request) -> Dict[str, Any]:
++    ctype: str = (req.headers.get("content-type") or "").lower()
+     sender = subject = text = ""
+     if "application/json" in ctype:
+         data    = await req.json()
+@@ -1135,8 +1135,8 @@ async def email_inbound(req: Request):
+     sent  = send_email(sender_addr, f"[Williams Cloud] Re: {subject or 'Command'}", reply, attachments=attachments)
+     return {"ok": True, "sent": sent}
+ 
+ # ==================== Gmail API helpers (GV bridge) ==
+-def _gmail_service():
++def _gmail_service() -> Any:
+     if not _GOOGLE_OK:
+         raise RuntimeError("Google libs not installed. pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib")
+     if not os.path.exists(GV_TOKEN_JSON) or not os.path.exists(GV_CLIENT_JSON):
+@@ -1148,22 +1148,22 @@ def _gmail_service():
+             raise RuntimeError("Gmail token invalid; re-authorize.")
+     return build("gmail", "v1", credentials=creds)
+ 
+-def _gmail_list_unread_gv(svc):
++def _gmail_list_unread_gv(svc: Any) -> List[Dict[str, Any]]:
+     res = svc.users().messages().list(userId="me", q=GMAIL_QUERY).execute()
+     return res.get("messages", []) or []
+ 
+-def _gmail_get_plaintext(svc, msg_id):
++def _gmail_get_plaintext(svc: Any, msg_id: str) -> Tuple[Dict[str, Any], Dict[str, str], str, str, str]:
+     m = svc.users().messages().get(userId="me", id=msg_id, format="full").execute()
+     headers = {h["name"].lower(): h["value"] for h in m.get("payload", {}).get("headers", [])}
+     frm = headers.get("from", ""); subj = headers.get("subject", "")
+     def _dec(b64): return base64.urlsafe_b64decode(b64.encode()).decode("utf-8", "ignore")
+     body = ""
+     payload = m.get("payload", {})
+     if "data" in payload.get("body", {}):
+         body = _dec(payload["body"]["data"])
+     else:
+         for part in payload.get("parts", []):
+             if part.get("mimeType") == "text/plain" and "data" in part.get("body", {}):
+                 body = _dec(part["body"]["data"]); break
+     return m, headers, frm, subj, (body or "").strip()
+ 
+-def _gmail_mark_read(svc, msg_id):
++def _gmail_mark_read(svc: Any, msg_id: str) -> None:
+     svc.users().messages().modify(userId="me", id=msg_id, body={"removeLabelIds": ["UNREAD"]}).execute()
+ 
+-def _gmail_send_plain(svc, to_addr, subject, body):
++def _gmail_send_plain(svc: Any, to_addr: str, subject: str, body: str) -> None:
+     msg = MIMEText(body)
+     msg["To"] = to_addr
+     msg["Subject"] = subject or "Re:"
+@@ -1171,7 +1171,7 @@ def _gmail_send_plain(svc, to_addr, subject, body):
+     svc.users().messages().send(userId="me", body={"raw": raw}).execute()
+ 
+-def _gmail_send_with_attachments(svc, to_addr: str, subject: str, body: str, attachments: Optional[List[str]] = None):
++def _gmail_send_with_attachments(svc: Any, to_addr: str, subject: str, body: str, attachments: Optional[List[str]] = None) -> None:
+     msg = MIMEMultipart()
+     msg["To"] = to_addr
+     msg["Subject"] = subject or "Re:"
+@@ -1190,9 +1190,9 @@ def _gmail_send_with_attachments(svc, to_addr: str, subject: str, body: str, att
+     raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+     svc.users().messages().send(userId="me", body={"raw": raw}).execute()
+ 
+ # ==================== GV POLLING LOOP =================
+-def run_gmail_polling_once():
++def run_gmail_polling_once() -> None:
+     """
+     Reads unread GV-SMS emails, normalizes sender phone, routes through process_message(),
+     emails reply back (GV converts to SMS), marks message read.
+@@ -1254,7 +1254,7 @@ def run_gmail_polling_once():
+ 
+-def run_gmail_polling_loop():
++def run_gmail_polling_loop() -> None:
+     print(f"[GV] Polling Gmail every {POLL_SECONDS}s (query: {GMAIL_QUERY})")
+     while True:
+         try:
+@@ -1264,14 +1264,14 @@ def run_gmail_polling_loop():
+         time.sleep(POLL_SECONDS)
+ 
+ # ==================== DEBUG: Gmail account whoami ===
+-@app.get("/debug/gmail/whoami")
+-def gmail_whoami():
++@app.get("/debug/gmail/whoami")
++def gmail_whoami() -> Dict[str, Any]:
+     try:
+         svc = _gmail_service()
+         prof = svc.users().getProfile(userId="me").execute()
+         return {"ok": True, "emailAddress": prof.get("emailAddress")}
+     except Exception as e:
+         return {"ok": False, "error": str(e)}
+ 
+ # ==================== DEBUG: trigger one poll now ===
+-@app.post("/debug/gmail_once")
+-def gmail_once():
++@app.post("/debug/gmail_once")
++def gmail_once() -> Dict[str, Any]:
+     try:
+         run_gmail_polling_once()
+         return {"ok": True}
+@@ -1281,17 +1281,18 @@ def gmail_once():
+ 
+ # ==================== DEBUG: GV simulator =============
+ @app.post("/debug/simulate_gv")
+ async def debug_simulate_gv(
+-    sender_local: Optional[str] = None,
+-    subject: Optional[str] = None,
+-    text: Optional[str] = None,
++    sender_local: Optional[str] = None,
++    subject: Optional[str] = None,
++    text: Optional[str] = None,
+     # Form fallbacks so `curl -d` works
+-    sender_local_form: Optional[str] = Form(default=None),
+-    subject_form: Optional[str] = Form(default=None),
+-    text_form: Optional[str] = Form(default=None),
+-    payload: Optional[dict] = Body(default=None),
+-):
++    sender_local_form: Optional[str] = Form(default=None),
++    subject_form: Optional[str] = Form(default=None),
++    text_form: Optional[str] = Form(default=None),
++    payload: Optional[Dict[str, Any]] = Body(default=None),
++) -> Dict[str, Any]:
+     # unify inputs from query / form / JSON
+     if payload:
+         sender_local = sender_local or payload.get("sender_local")
+         subject = subject or payload.get("subject")
+         text = text or payload.get("text")
+@@ -1361,9 +1362,9 @@ async def debug_simulate_gv(
+     }
+ 
+ # ==================== DEBUG: trigger self-improver ===
+-@app.post("/debug/self_improve")
+-def debug_self_improve():
++@app.post("/debug/self_improve")
++def debug_self_improve() -> Dict[str, Any]:
+     """

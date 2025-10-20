@@ -1,0 +1,19 @@
+import types, mailer
+
+class DummySMTP:
+    def __init__(self,*a,**k): pass
+    def starttls(self): pass
+    def login(self,u,p): pass
+    def send_message(self,msg,to_addrs=None):
+        assert msg["Subject"]; assert to_addrs
+        assert any(True for _ in msg.iter_attachments())
+    def __enter__(self): return self
+    def __exit__(self,*a): return False
+
+def test_send_email_with_attachment(monkeypatch, tmp_path):
+    monkeypatch.setenv("SMTP_USER","user@example.com")
+    monkeypatch.setenv("SMTP_PASS","x")
+    monkeypatch.setenv("FROM_EMAIL","user@example.com")
+    pdf = tmp_path/"demo.pdf"; pdf.write_bytes(b"%PDF-1.4\n%EOF")
+    mailer.smtplib = types.SimpleNamespace(SMTP=DummySMTP)
+    mailer.send_email("to@example.com","Test PDF","Body",files=[str(pdf)])

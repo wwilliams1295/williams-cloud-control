@@ -1,10 +1,11 @@
-import os, msal
+import os
+import msal
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path="/Users/williamwilliams/jarvis-demo/.env", override=True)
 
-CLIENT_ID  = os.environ["AZURE_CLIENT_ID"]
-TENANT     = os.environ.get("AZURE_TENANT_ID", "common")
+CLIENT_ID = os.environ["AZURE_CLIENT_ID"]
+TENANT = os.environ.get("AZURE_TENANT_ID", "common")
 CACHE_PATH = os.environ.get("ONEDRIVE_TOKEN_CACHE", ".onedrive_token.json")
 SCOPES = ["Files.ReadWrite.All"]
 
@@ -13,7 +14,7 @@ cache = msal.SerializableTokenCache()
 app = msal.PublicClientApplication(
     CLIENT_ID,
     authority=f"https://login.microsoftonline.com/{TENANT}",
-    token_cache=cache
+    token_cache=cache,
 )
 
 flow = app.initiate_device_flow(scopes=SCOPES)

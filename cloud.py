@@ -1767,6 +1767,33 @@ def gmail_messages() -> Dict[str, Any]:
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+@app.post("/debug/test_gmail_send")
+def test_gmail_send() -> Dict[str, Any]:
+    """Debug: Test Gmail sending."""
+    try:
+        svc = _gmail_service()
+        
+        # Test sending a simple message
+        test_subject = "Re: Test from Jarvis AI"
+        test_body = "This is a test reply from Jarvis AI Assistant on Render. If you receive this, Gmail sending is working correctly."
+        test_to = "19177194526.15613891295.CRmvhhlGR7@txt.voice.google.com"
+        
+        _gmail_send_plain(svc, test_to, test_subject, test_body)
+        
+        return {
+            "status": "success",
+            "message": "Test Gmail message sent successfully",
+            "to": test_to,
+            "subject": test_subject
+        }
+    except Exception as e:
+        return {
+            "status": "error", 
+            "message": str(e),
+            "gmail_ok": _GOOGLE_OK,
+            "credentials_exist": os.path.exists(GV_TOKEN_JSON) and os.path.exists(GV_CLIENT_JSON)
+        }
+
 
 # ==================== DEBUG: GV simulator =============
 @app.post("/debug/simulate_gv")

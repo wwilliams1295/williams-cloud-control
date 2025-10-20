@@ -21,8 +21,8 @@ import subprocess
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config.settings_simple import get_settings
-from agent_v2 import superchat
+# Config system removed - using environment variables directly
+from agent import superchat
 
 # Configure logging
 logging.basicConfig(
@@ -39,7 +39,6 @@ class MasterAutoImprovementSystem:
     """Master system that orchestrates all improvement mechanisms."""
     
     def __init__(self):
-        self.settings = get_settings()
         self.improvement_systems = {
             "basic": "scripts/auto_improvement_loop.py",
             "advanced": "scripts/advanced_auto_improvement.py", 

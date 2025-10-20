@@ -680,9 +680,58 @@ def pick_candidates(prompt: str) -> List[str]:
 
 
 # =========================
+# System context helper
+# =========================
+def get_system_context() -> str:
+    """Get system context about available plugins and files."""
+    import os
+    from pathlib import Path
+    
+    # Get available plugins
+    try:
+        from cloud import _list_plugins
+        plugins = _list_plugins()
+        plugin_info = f"Available plugins: {', '.join(plugins)}"
+    except:
+        plugin_info = "Plugins: file_edit, send_pdf, calendar_invite, edgar_pull"
+    
+    # Get main project files
+    main_files = [f for f in os.listdir('.') if f.endswith('.py') and f not in ['test_app.py']]
+    file_info = f"Main files: {', '.join(main_files)}"
+    
+    # Get plugin files
+    plugin_files = []
+    if os.path.exists('plugins/'):
+        plugin_files = [f for f in os.listdir('plugins/') if f.endswith('.py') and f != '__init__.py']
+    plugin_file_info = f"Plugin files: {', '.join(plugin_files)}"
+    
+    return f"""
+You are Jarvis AI Assistant, a sophisticated AI system with the following capabilities:
+
+{plugin_info}
+{file_info}
+{plugin_file_info}
+
+Key capabilities:
+- Multi-LLM routing (OpenAI, Perplexity, Anthropic, Gemini, Grok, Mistral)
+- Google Voice SMS integration via Gmail
+- File management (PPTX, PDF, Excel creation)
+- Calendar invite generation
+- SEC data pulling
+- Auto-improvement system
+- Cloud storage (AWS S3)
+
+You can help users understand and use these features. When asked about plugins or files, provide specific information about what's available.
+"""
+
+# =========================
 # Public entrypoint
 # =========================
 async def superchat(prompt: str, system: str = "Be precise and helpful.") -> str:
+    # Use system context if default system prompt
+    if system == "Be precise and helpful.":
+        system = get_system_context()
+    
     messages = [
         {"role": "system", "content": system},
         {"role": "user", "content": prompt},

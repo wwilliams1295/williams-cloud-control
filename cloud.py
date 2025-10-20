@@ -1727,6 +1727,46 @@ def gmail_status() -> Dict[str, Any]:
             "credentials_exist": os.path.exists(GV_TOKEN_JSON) and os.path.exists(GV_CLIENT_JSON)
         }
 
+@app.get("/debug/gmail_messages")
+def gmail_messages() -> Dict[str, Any]:
+    """Debug: List recent Gmail messages."""
+    try:
+        svc = _gmail_service()
+        
+        # Get recent messages (not just unread)
+        res = svc.users().messages().list(
+            userId="me", 
+            q="in:inbox newer_than:1d (from:@txt.voice.google.com OR from:voice-noreply@google.com)",
+            maxResults=10
+        ).execute()
+        
+        messages = res.get("messages", [])
+        message_details = []
+        
+        for msg in messages[:5]:  # Limit to 5 messages
+            try:
+                msg_detail = svc.users().messages().get(userId="me", id=msg["id"]).execute()
+                headers = {h["name"]: h["value"] for h in msg_detail.get("payload", {}).get("headers", [])}
+                
+                message_details.append({
+                    "id": msg["id"],
+                    "subject": headers.get("Subject", ""),
+                    "from": headers.get("From", ""),
+                    "date": headers.get("Date", ""),
+                    "snippet": msg_detail.get("snippet", "")
+                })
+            except Exception as e:
+                message_details.append({"id": msg["id"], "error": str(e)})
+        
+        return {
+            "status": "success",
+            "total_messages": len(messages),
+            "messages": message_details,
+            "query": "in:inbox newer_than:1d (from:@txt.voice.google.com OR from:voice-noreply@google.com)"
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 
 # ==================== DEBUG: GV simulator =============
 @app.post("/debug/simulate_gv")

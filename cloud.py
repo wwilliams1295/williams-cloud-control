@@ -111,6 +111,32 @@ except Exception as e:
     print(f"❌ Error creating FastAPI app: {e}")
     raise
 
+# Background Gmail polling thread
+_gmail_thread = None
+
+@app.on_event("startup")
+async def startup_event():
+    """Start Gmail polling loop on app startup."""
+    global _gmail_thread
+    try:
+        if _GOOGLE_OK:
+            print("Starting Gmail polling loop...")
+            _gmail_thread = threading.Thread(target=run_gmail_polling_loop, daemon=True)
+            _gmail_thread.start()
+            print("✅ Gmail polling loop started")
+        else:
+            print("⚠️ Gmail not available - skipping polling loop")
+    except Exception as e:
+        print(f"❌ Error starting Gmail polling: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Clean up on app shutdown."""
+    global _gmail_thread
+    if _gmail_thread:
+        print("Stopping Gmail polling loop...")
+        # The thread will stop when the app shuts down
+
 @app.get("/")
 def root():
     try:

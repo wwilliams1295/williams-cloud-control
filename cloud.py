@@ -82,19 +82,24 @@ try:
     if os.getenv('RENDER') and os.getenv('GMAIL_CLIENT_SECRET_JSON') and os.getenv('GMAIL_TOKEN_JSON'):
         print("Setting up Gmail credentials from environment variables...")
         
-        # Parse and save client_secret.json
-        client_secret_data = json.loads(os.getenv('GMAIL_CLIENT_SECRET_JSON'))
-        with open('client_secret.json', 'w') as f:
-            json.dump(client_secret_data, f)
-        
-        # Parse and save token.json
-        token_data = json.loads(os.getenv('GMAIL_TOKEN_JSON'))
-        with open('token.json', 'w') as f:
-            json.dump(token_data, f)
-        
-        print("Gmail credentials set up successfully")
+        try:
+            # Parse and save client_secret.json
+            client_secret_data = json.loads(os.getenv('GMAIL_CLIENT_SECRET_JSON'))
+            with open('client_secret.json', 'w') as f:
+                json.dump(client_secret_data, f)
+            
+            # Parse and save token.json
+            token_data = json.loads(os.getenv('GMAIL_TOKEN_JSON'))
+            with open('token.json', 'w') as f:
+                json.dump(token_data, f)
+            
+            print("Gmail credentials set up successfully")
+        except json.JSONDecodeError as e:
+            print(f"Warning: Invalid JSON in Gmail credentials: {e}")
+        except Exception as e:
+            print(f"Warning: Error setting up Gmail credentials: {e}")
     else:
-        print("Gmail credentials not found in environment variables")
+        print("Gmail credentials not found in environment variables - Gmail features will be disabled")
 except Exception as e:
     print(f"Warning: Could not setup Gmail credentials: {e}")
 
@@ -108,7 +113,18 @@ except Exception as e:
 
 @app.get("/")
 def root():
-    return {"message": "Jarvis AI Assistant is running", "status": "ok"}
+    try:
+        plugins = _list_plugins()
+    except:
+        plugins = []
+    
+    return {
+        "message": "Jarvis AI Assistant is running", 
+        "status": "ok",
+        "version": "1.0.0",
+        "gmail_available": _GOOGLE_OK,
+        "plugins": plugins
+    }
 
 # ==================== CONFIG ======================
 SECRET: str = os.getenv("DISPATCH_SECRET", "dev-secret")

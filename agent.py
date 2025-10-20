@@ -683,11 +683,12 @@ def pick_candidates(prompt: str) -> List[str]:
 # System context helper
 # =========================
 def get_system_context() -> str:
-    """Get system context about available plugins and files."""
+    """Get comprehensive system context about available plugins, files, and capabilities."""
     import os
+    import json
     from pathlib import Path
     
-    # Get available plugins
+    # Get available plugins with descriptions
     try:
         from cloud import _list_plugins
         plugins = _list_plugins()
@@ -695,34 +696,121 @@ def get_system_context() -> str:
     except:
         plugin_info = "Plugins: file_edit, send_pdf, calendar_invite, edgar_pull"
     
+    # Get detailed plugin information
+    plugin_details = []
+    if os.path.exists('plugins/'):
+        for plugin_file in os.listdir('plugins/'):
+            if plugin_file.endswith('.py') and plugin_file != '__init__.py':
+                plugin_name = plugin_file.replace('.py', '')
+                plugin_details.append(f"- {plugin_name}: {_get_plugin_description(plugin_name)}")
+    
+    # Get auto-improvement scripts
+    auto_improvement_scripts = []
+    if os.path.exists('scripts/'):
+        for script in os.listdir('scripts/'):
+            if script.endswith('.py') and 'improvement' in script.lower():
+                auto_improvement_scripts.append(script)
+    
     # Get main project files
     main_files = [f for f in os.listdir('.') if f.endswith('.py') and f not in ['test_app.py']]
-    file_info = f"Main files: {', '.join(main_files)}"
     
-    # Get plugin files
-    plugin_files = []
-    if os.path.exists('plugins/'):
-        plugin_files = [f for f in os.listdir('plugins/') if f.endswith('.py') and f != '__init__.py']
-    plugin_file_info = f"Plugin files: {', '.join(plugin_files)}"
+    # Get environment variables status
+    env_status = _get_environment_status()
     
     return f"""
-You are Jarvis AI Assistant, a sophisticated AI system with the following capabilities:
+You are Jarvis AI Assistant, a sophisticated AI system with comprehensive capabilities:
 
-{plugin_info}
-{file_info}
-{plugin_file_info}
+## CORE SYSTEM FILES:
+{', '.join(main_files)}
 
-Key capabilities:
+## AVAILABLE PLUGINS:
+{chr(10).join(plugin_details) if plugin_details else plugin_info}
+
+## AUTO-IMPROVEMENT SYSTEM:
+- Scripts: {', '.join(auto_improvement_scripts)}
+- Can run: auto_improvement_loop.py, advanced_auto_improvement.py, creative_ai_evolution.py
+- Commands: "run auto improvement", "start creative evolution", "test improvements"
+
+## KEY CAPABILITIES:
 - Multi-LLM routing (OpenAI, Perplexity, Anthropic, Gemini, Grok, Mistral)
 - Google Voice SMS integration via Gmail
-- File management (PPTX, PDF, Excel creation)
-- Calendar invite generation
-- SEC data pulling
-- Auto-improvement system
-- Cloud storage (AWS S3)
+- File management (PPTX, PDF, Excel creation and editing)
+- Calendar invite generation and sending
+- SEC data pulling (Edgar filings)
+- Auto-improvement system (self-evolving code)
+- Cloud storage (AWS S3 integration)
+- System monitoring and performance tracking
+- Remote command execution via SMS/email
 
-You can help users understand and use these features. When asked about plugins or files, provide specific information about what's available.
+## ENVIRONMENT STATUS:
+{env_status}
+
+## COMMANDS YOU CAN EXECUTE:
+- "what plugins exist" → List all available plugins
+- "run auto improvement" → Start the auto-improvement system
+- "what files are on server" → List all project files
+- "test [plugin_name]" → Test a specific plugin
+- "create [file_type] [name]" → Create files (PPTX, PDF, Excel)
+- "send calendar invite [details]" → Generate and send calendar invites
+- "pull edgar data [ticker]" → Get SEC filing data
+- "monitor system" → Check system performance
+
+## IMPORTANT:
+- You are NOT just a Perplexity search tool
+- You are a full AI assistant with file management, plugin execution, and auto-improvement capabilities
+- You can create, edit, and manage files
+- You can run background processes and improvements
+- You have access to cloud storage and can persist data
+- You can execute remote commands and manage the system
+
+When users ask about your capabilities, provide specific details about what you can do, not generic responses.
 """
+
+def _get_plugin_description(plugin_name: str) -> str:
+    """Get description of a specific plugin."""
+    descriptions = {
+        'file_edit': 'Create and edit files (PPTX, PDF, Excel, text)',
+        'send_pdf': 'Generate and send PDF documents',
+        'calendar_invite': 'Create and send calendar invitations',
+        'sends_calendar_invite': 'Alternative calendar invite plugin',
+        'edgar_pull': 'Pull SEC filing data for companies',
+        'monitors_system_performance': 'Monitor system performance and metrics'
+    }
+    return descriptions.get(plugin_name, 'Plugin functionality')
+
+def _get_environment_status() -> str:
+    """Get status of environment variables and API keys."""
+    import os
+    
+    status = []
+    apis = {
+        'OpenAI': 'OPENAI_API_KEY',
+        'Perplexity': 'PPLX_API_KEY', 
+        'Anthropic': 'ANTHROPIC_API_KEY',
+        'Google': 'GOOGLE_API_KEY',
+        'Grok': 'XAI_API_KEY',
+        'Mistral': 'MISTRAL_API_KEY'
+    }
+    
+    for name, key in apis.items():
+        if os.getenv(key):
+            status.append(f"✅ {name} API: Available")
+        else:
+            status.append(f"❌ {name} API: Not configured")
+    
+    # Check Gmail
+    if os.getenv('GMAIL_CLIENT_SECRET_JSON') and os.getenv('GMAIL_TOKEN_JSON'):
+        status.append("✅ Gmail Integration: Available")
+    else:
+        status.append("❌ Gmail Integration: Not configured")
+    
+    # Check AWS S3
+    if os.getenv('AWS_ACCESS_KEY_ID') and os.getenv('AWS_SECRET_ACCESS_KEY'):
+        status.append("✅ AWS S3 Storage: Available")
+    else:
+        status.append("❌ AWS S3 Storage: Not configured")
+    
+    return '\n'.join(status)
 
 # =========================
 # Public entrypoint

@@ -1139,6 +1139,60 @@ def process_message(sender_id: str, body: str, channel: str = "sms") -> str:
             s = "ping"
         lower = s.lower()
 
+    # === System-aware commands (handle before general processing) ===
+    if lower in {"what plugins exist", "list plugins", "show plugins"}:
+        try:
+            plugins = _list_plugins()
+            plugin_list = "\n".join([f"• {p}" for p in plugins])
+            return finish(f"Available plugins:\n{plugin_list}")
+        except Exception as e:
+            return finish(f"Plugin list error: {e}")
+    
+    if lower in {"what files are on server", "list files", "show files"}:
+        try:
+            import os
+            main_files = [f for f in os.listdir('.') if f.endswith('.py') and f not in ['test_app.py']]
+            plugin_files = []
+            if os.path.exists('plugins/'):
+                plugin_files = [f for f in os.listdir('plugins/') if f.endswith('.py') and f != '__init__.py']
+            
+            file_list = "Main files:\n" + "\n".join([f"• {f}" for f in main_files])
+            if plugin_files:
+                file_list += "\n\nPlugin files:\n" + "\n".join([f"• {f}" for f in plugin_files])
+            return finish(file_list)
+        except Exception as e:
+            return finish(f"File list error: {e}")
+    
+    if lower in {"run auto improvement", "start auto improvement", "test improvements"}:
+        try:
+            import subprocess
+            import sys
+            result = subprocess.run([sys.executable, "scripts/auto_improvement_loop.py"], 
+                                  capture_output=True, text=True, timeout=30)
+            if result.returncode == 0:
+                return finish("Auto-improvement started successfully!")
+            else:
+                return finish(f"Auto-improvement error: {result.stderr}")
+        except Exception as e:
+            return finish(f"Auto-improvement error: {e}")
+    
+    if lower in {"system status", "status report", "health check"}:
+        try:
+            import os
+            status = []
+            status.append("🟢 Jarvis AI Assistant - Online")
+            status.append(f"📁 Working directory: {os.getcwd()}")
+            status.append(f"🔌 Gmail integration: {'✅' if os.getenv('GMAIL_CLIENT_SECRET_JSON') else '❌'}")
+            status.append(f"☁️ AWS S3: {'✅' if os.getenv('AWS_ACCESS_KEY_ID') else '❌'}")
+            
+            # Check plugins
+            plugins = _list_plugins()
+            status.append(f"🔌 Plugins loaded: {len(plugins)}")
+            
+            return finish("\n".join(status))
+        except Exception as e:
+            return finish(f"Status check error: {e}")
+
     # === Fast-path greetings (ALWAYS reply) ===
     if lower in {"hi", "hello", "hey", "yo"}:
         return finish("Standing by.")

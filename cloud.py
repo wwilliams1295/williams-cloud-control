@@ -98,7 +98,13 @@ try:
 except Exception as e:
     print(f"Warning: Could not setup Gmail credentials: {e}")
 
-app = FastAPI()
+# Create FastAPI app with error handling
+try:
+    app = FastAPI(title="Jarvis AI Assistant", version="1.0.0")
+    print("✅ FastAPI app created successfully")
+except Exception as e:
+    print(f"❌ Error creating FastAPI app: {e}")
+    raise
 
 @app.get("/")
 def root():
@@ -1440,21 +1446,25 @@ async def email_inbound(req: Request):
 
 # ==================== Gmail API helpers (GV bridge) ==
 def _gmail_service():
-    if not _GOOGLE_OK:
-        raise RuntimeError(
-            "Google libs not installed. pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib"
-        )
-    if not os.path.exists(GV_TOKEN_JSON) or not os.path.exists(GV_CLIENT_JSON):
-        raise RuntimeError("Missing token.json or client_secret.json for Gmail.")
-    creds = Credentials.from_authorized_user_file(GV_TOKEN_JSON, GMAIL_SCOPES)
-    if not creds.valid:
-        if creds.expired and creds.refresh_token:
-            creds.refresh(GoogleRequest())
-            with open(GV_TOKEN_JSON, "w") as f:
-                f.write(creds.to_json())
-        else:
-            raise RuntimeError("Gmail token invalid; re-authorize.")
-    return build("gmail", "v1", credentials=creds)
+    try:
+        if not _GOOGLE_OK:
+            raise RuntimeError(
+                "Google libs not installed. pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib"
+            )
+        if not os.path.exists(GV_TOKEN_JSON) or not os.path.exists(GV_CLIENT_JSON):
+            raise RuntimeError("Missing token.json or client_secret.json for Gmail.")
+        creds = Credentials.from_authorized_user_file(GV_TOKEN_JSON, GMAIL_SCOPES)
+        if not creds.valid:
+            if creds.expired and creds.refresh_token:
+                creds.refresh(GoogleRequest())
+                with open(GV_TOKEN_JSON, "w") as f:
+                    f.write(creds.to_json())
+            else:
+                raise RuntimeError("Gmail token invalid; re-authorize.")
+        return build("gmail", "v1", credentials=creds)
+    except Exception as e:
+        print(f"❌ Gmail service error: {e}")
+        raise
 
 
 def _gmail_list_unread_gv(svc) -> List[Dict[str, Any]]:
@@ -1663,14 +1673,16 @@ def gmail_status() -> Dict[str, Any]:
             "status": "success",
             "gmail_connected": True,
             "unread_messages": len(msgs),
-            "google_ok": _GOOGLE_OK
+            "google_ok": _GOOGLE_OK,
+            "credentials_exist": os.path.exists(GV_TOKEN_JSON) and os.path.exists(GV_CLIENT_JSON)
         }
     except Exception as e:
         return {
             "status": "error", 
             "message": str(e),
             "gmail_connected": False,
-            "google_ok": _GOOGLE_OK
+            "google_ok": _GOOGLE_OK,
+            "credentials_exist": os.path.exists(GV_TOKEN_JSON) and os.path.exists(GV_CLIENT_JSON)
         }
 
 

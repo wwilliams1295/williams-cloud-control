@@ -189,6 +189,8 @@ config/security/client_secret.json
 config/security/token.json
 config/security/*.key
 config/security/*.pem
+*.token.json
+.onedrive_token.json
 
 # Runtime files
 *.pid

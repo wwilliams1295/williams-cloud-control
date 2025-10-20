@@ -64,7 +64,7 @@ def run_mypy(args: List[str]) -> str:
         r"(\.venv|venv|backups|site-packages|\.tox|\.mypy_cache|\.pytest_cache)",
     ]
     cmd.extend(args)
-    proc = subprocess.run(cmd, cwd=str(ROOT), capture_output=True, text=True)  # nosec B603
+    proc = subprocess.run(cmd, cwd=str(ROOT), capture_output=True, text=True)
     out = proc.stdout + proc.stderr
     return out
 

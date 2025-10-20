@@ -1,4 +1,4 @@
-import subprocess  # nosec B404
+import subprocess
 import sys
 import time
 import datetime

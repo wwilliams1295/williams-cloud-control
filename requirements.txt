@@ -33,26 +33,10 @@ google-auth-oauthlib>=1.2
 gitpython>=3.1
 pyyaml>=6.0
 pytest>=8.3
-pytest-asyncio>=0.21.0
-pytest-cov>=4.0.0
 ruff>=0.6
 black>=24.8
 mypy>=1.11
 bandit>=1.7
-safety>=2.0.0
-isort>=5.12.0
-flake8>=6.0.0
-
-# --- Configuration Management ---
-pydantic-settings>=2.0.0
-
-# --- Docker Support (optional) ---
-docker>=6.0.0
-
-# --- Cloud Storage Support ---
-boto3>=1.26.0
-google-cloud-storage>=2.10.0
-azure-storage-blob>=12.19.0
 
 # --- Windows-only (safe to ignore on macOS/Linux) ---
 pywin32; platform_system == "Windows"

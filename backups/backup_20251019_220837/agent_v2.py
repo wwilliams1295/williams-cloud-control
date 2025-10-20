@@ -276,11 +276,3 @@ if __name__ == "__main__":
             print(f"Unexpected error: {e}")
     
     asyncio.run(main())
-
-
-# Auto-improvement: Enhanced Logging System
-async def enhanced_logging_system():
-    """Add better logging capabilities to track AI improvements"""
-    logger.info("Executing auto-improvement: Enhanced Logging System")
-    return {"success": True, "message": "Improvement executed"}
-

@@ -1,149 +1,37 @@
-# Render deployment configuration
 services:
   - type: web
-    name: jarvis-demo
+    name: williams-cloud-control
     env: python
-    plan: starter
-    buildCommand: |
-      pip install -r requirements.txt
-      python -m pytest tests/ -v --tb=short
-    startCommand: |
-      python -c "
-      import sys
-      sys.path.insert(0, '.')
-      from cloud import app
-      import uvicorn
-      uvicorn.run(app, host='0.0.0.0', port=$PORT)
-      "
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn cloud:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: PYTHONPATH
-        value: .
-      - key: DEBUG_LOG
-        value: "1"
-      - key: NODE_NAME
-        value: "Render-Node"
-      - key: APP_TIMEZONE
-        value: "UTC"
-      - key: CLOUD_OUT_DIR
-        value: "/opt/render/project/src/cloud_output"
-      - key: SHEETS_DIR
-        value: "/opt/render/project/src/sheets"
-      - key: DATA_DIR
-        value: "/opt/render/project/src/data"
-      - key: PUBLIC_BASE_URL
-        value: "https://jarvis-demo.onrender.com"
-      - key: MAC_AGENT_URL
-        value: "https://jarvis-demo.onrender.com"
-      - key: DISPATCH_SECRET
-        value: "render-secret-key"
-      - key: GREET_COOLDOWN_SECONDS
-        value: "300"
-      - key: POLL_SECONDS
-        value: "60"
-      - key: HTTP_TIMEOUT
-        value: "30"
-      - key: MAX_TOKENS
-        value: "2000"
-      - key: WEB_SCORING_THRESHOLD
-        value: "3"
-      - key: PPLX_MODEL
-        value: "sonar"
-      - key: FORCE_PERPLEXITY_WEB
-        value: "0"
-      - key: PREFER_PERPLEXITY
-        value: "0"
-      - key: ALWAYS_SYNTHESIZE_WEB
-        value: "0"
-      - key: GV_IGNORE_ADMIN
-        value: "1"
-      - key: GV_HARD_IGNORE_SETTINGS
-        value: "1"
-      - key: PING_AS_FALLBACK_TO_CHAT
-        value: "1"
-      - key: GV_SOFT_CHAR_LIMIT
-        value: "1000"
-      - key: SEC_APP_NAME
-        value: "Jarvis Demo"
-      - key: SEC_CONTACT_EMAIL
-        value: "admin@example.com"
-      - key: SMTP_DEBUG
-        value: "0"
-      - key: SMTP_PORT
-        value: "587"
-      - key: GREET_FORCE
-        value: "0"
-      - key: IMPROVE_INTERVAL_MIN
-        value: "60"
-      - key: SMTP_HOST
-        value: ""
-      - key: SMTP_USER
-        value: ""
-      - key: SMTP_PASS
-        value: ""
-      - key: EMAIL_FROM
-        value: ""
-      - key: COMPANY_ADDRESS
-        value: ""
-      - key: EMAIL_WHITELIST
-        value: ""
-      - key: ALLOWED_NUMBERS
-        value: ""
-      - key: WIN_AGENT_URL
-        value: ""
-      - key: LLAMA_API_BASE
-        value: ""
-      - key: LLAMA_API_MODEL
-        value: ""
-      - key: LLAMA_API_KEY
-        value: ""
-      - key: LOCAL_OPENAI_BASE
-        value: ""
-      - key: LOCAL_OPENAI_MODEL
-        value: ""
-      - key: OLLAMA_API_KEY
-        value: ""
-      - key: GV_CLIENT_JSON
-        value: "client_secret.json"
-      - key: GV_TOKEN_JSON
-        value: "token.json"
-      # Cloud Storage Configuration (AWS S3)
-      - key: STORAGE_TYPE
-        value: "s3"
-      - key: STORAGE_BUCKET
-        value: "williams-cloud-jarvis-files"
-      - key: STORAGE_REGION
-        value: "us-east-2"
-      - key: AWS_ACCESS_KEY_ID
-        value: "AKIA2BPAO2SDFO3C42G4"
-      - key: AWS_SECRET_ACCESS_KEY
-        value: "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"
-      - key: GMAIL_QUERY
-        value: 'in:inbox is:unread newer_than:7d (from:@txt.voice.google.com OR (from:voice-noreply@google.com subject:"New message"))'
-      - key: CODES_DB
-        value: "/opt/render/project/src/commands.json"
-      - key: ONEDRIVE_TOKEN_CACHE
-        value: "/opt/render/project/src/.onedrive_token.json"
-      - key: AZURE_CLIENT_ID
-        value: ""
-      - key: AZURE_TENANT_ID
-        value: "common"
-      - key: GOOGLE_SA_JSON
-        value: ""
-      - key: TO_EMAIL
-        value: ""
-      - key: DISPLAY_NAME_CHRIS
-        value: ""
-      - key: IMPROVE_INTERVAL_MIN
-        value: "60"
       - key: OPENAI_API_KEY
         sync: false
       - key: PPLX_API_KEY
         sync: false
-      - key: ANTHROPIC_API_KEY
+      - key: SMTP_HOST
         sync: false
-      - key: GOOGLE_API_KEY
+      - key: SMTP_PORT
         sync: false
-      - key: XAI_API_KEY
+      - key: SMTP_TLS
         sync: false
-      - key: MISTRAL_API_KEY
+      - key: SMTP_USER
         sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: FROM_EMAIL
+        sync: false
+      - key: ENABLE_SEND_PDF
+        value: "1"
+      - key: FORCE_PERPLEXITY_WEB
+        value: "1"
+      - key: PREFER_PERPLEXITY
+        value: "1"
+      - key: PPLX_MODEL
+        value: "sonar"
+      - key: PPLX_MAX_TOKENS
+        value: "700"
+
+
+

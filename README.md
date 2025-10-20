@@ -1,139 +1,91 @@
 # Jarvis AI Assistant
 
-An intelligent AI assistant with modular architecture, cloud storage, and auto-improvement capabilities.
+A comprehensive AI assistant system with SMS/Email integration, file management, and auto-improvement capabilities.
 
-## 🏗️ Project Structure
+## Features
 
-```
-jarvis-demo/
-├── config/                 # Configuration files
-│   ├── __init__.py
-│   ├── settings.py
-│   ├── settings_simple.py
-│   ├── .env.example
-│   ├── bandit.yaml
-│   ├── mypy.ini
-│   └── .ruff.toml
-├── core/                   # Core functionality
-│   ├── __init__.py
-│   ├── capabilities.py
-│   ├── execute.py
-│   ├── errors.py
-│   └── planner.py
-├── providers/              # LLM API providers
-│   ├── __init__.py
-│   ├── base.py
-│   ├── openai.py
-│   ├── perplexity.py
-│   ├── anthropic.py
-│   ├── gemini.py
-│   ├── grok.py
-│   ├── mistral.py
-│   └── openai_compatible.py
-├── routing/                # Request routing logic
-│   ├── __init__.py
-│   ├── provider_registry.py
-│   ├── router.py
-│   └── web_scorer.py
-├── plugins/                # Extensible plugin system
-│   ├── __init__.py
-│   ├── plugin_manager.py
-│   ├── loader.py
-│   ├── calendar_plugin.py
-│   ├── system_monitor_plugin.py
-│   └── sends_calendar_invite.py
-├── tools/                  # Development tools
-│   ├── auto_improver.py
-│   ├── mypy_autofix.py
-│   ├── self_loop.py
-│   ├── safe-apply-patch.sh
-│   └── policy.yaml
-├── scripts/                # Utility scripts
-│   ├── deploy.py
-│   ├── migrate_to_v2.py
-│   ├── auto_improvement_loop.py
-│   └── sandbox_tester.py
-├── tests/                  # Test suites
-│   ├── unit/
-│   ├── integration/
-│   └── test_plugins.py
-├── storage/                # Local storage and patches
-│   └── patch.diff
-├── docs/                   # Documentation
-│   └── IMPROVEMENT_SUMMARY.md
-├── data/                   # Data files
-├── agent.py               # Legacy agent (deprecated)
-├── agent_v2.py            # New modular agent
-├── cloud.py               # FastAPI web service
-├── cloud_storage.py       # Cloud storage abstraction
-├── file_manager.py        # File operations
-├── remote_commands.py     # SMS/email command processing
-├── ai_plugin_integration.py # AI plugin integration
-├── functions.py           # Utility functions
-├── mailer.py              # Email functionality
-├── onedrive_device_login.py # OneDrive integration
-├── requirements.txt       # Python dependencies
-├── runtime.txt            # Python version
-├── render.yaml            # Render deployment config
-└── README.md              # This file
-```
+- **Multi-LLM Support**: OpenAI, Perplexity, Anthropic, Gemini, Grok, Mistral
+- **SMS/Email Integration**: Google Voice via Gmail API
+- **File Management**: Create and manage PPTX, PDF, Excel files
+- **Auto-Improvement**: Self-evolving codebase with AI-powered enhancements
+- **Plugin System**: Extensible architecture for new functionalities
+- **Cloud Storage**: AWS S3 integration for persistent file storage
 
-## 🚀 Features
+## Quick Start
 
-- **Modular Architecture**: Clean separation of concerns
-- **Multiple LLM Providers**: OpenAI, Perplexity, Anthropic, Gemini, Grok, Mistral
-- **Cloud Storage**: AWS S3, Google Cloud Storage, Azure Blob
-- **Plugin System**: Extensible functionality
-- **Auto-Improvement**: Self-evolving codebase
-- **File Management**: PPT, Excel, PDF creation and editing
-- **Remote Control**: SMS/email command interface
-- **SEC Filings**: Automated 10-K, 10-Q retrieval
-- **Email Integration**: Gmail/Google Voice support
-
-## 🛠️ Setup
-
-1. **Install dependencies**:
+1. **Install Dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
 
-2. **Configure environment**:
+2. **Set Environment Variables**:
    ```bash
-   cp config/.env.example .env
-   # Edit .env with your API keys
+   # Required API Keys
+   export OPENAI_API_KEY="your-key"
+   export PPLX_API_KEY="your-key"
+   
+   # Optional API Keys
+   export ANTHROPIC_API_KEY="your-key"
+   export GOOGLE_API_KEY="your-key"
+   export XAI_API_KEY="your-key"
+   export MISTRAL_API_KEY="your-key"
+   
+   # Email Configuration
+   export SMTP_HOST="smtp.gmail.com"
+   export SMTP_PORT="587"
+   export SMTP_USER="your-email@gmail.com"
+   export SMTP_PASS="your-app-password"
+   export FROM_EMAIL="your-email@gmail.com"
+   
+   # Cloud Storage (AWS S3)
+   export STORAGE_TYPE="s3"
+   export STORAGE_BUCKET="your-bucket"
+   export STORAGE_REGION="us-east-2"
+   export AWS_ACCESS_KEY_ID="your-key"
+   export AWS_SECRET_ACCESS_KEY="your-secret"
    ```
 
-3. **Run the application**:
+3. **Run the Application**:
    ```bash
    python cloud.py
    ```
 
-## 📱 Usage
+## Deployment
 
-### SMS/Email Commands
-- `help` - Show available commands
-- `status` - Check system status
-- `create ppt "Title" with bullets` - Create PowerPoint
-- `pull 10-k AAPL` - Get Apple's 10-K filing
-- `add plugin "description"` - Add new plugin
+The application is configured for deployment on Render.com. See `render.yaml` for configuration details.
 
-### File Operations
-- Create and edit PowerPoint presentations
-- Generate Excel spreadsheets
-- Download SEC filings as PDFs
-- Send files via email with download links
+## Auto-Improvement System
 
-## 🌐 Deployment
+The system includes an auto-improvement loop that continuously enhances the codebase:
 
-Deploy to Render using the included `render.yaml` configuration.
+```bash
+# Run auto-improvement once
+python scripts/auto_improvement_loop.py --once
 
-## 🔧 Development
+# Run continuous improvement
+python scripts/auto_improvement_loop.py
+```
 
-- **Linting**: `ruff check .`
-- **Type checking**: `mypy .`
-- **Security**: `bandit -r .`
-- **Testing**: `pytest tests/`
+## Project Structure
 
-## 📄 License
+- `agent.py` - Core AI routing and LLM integration
+- `cloud.py` - Main FastAPI application with SMS/Email handling
+- `plugins/` - Plugin system for extensible functionality
+- `scripts/` - Auto-improvement and deployment scripts
+- `tools/` - Development and maintenance tools
+- `backups/` - Automated backups of previous versions
 
-MIT License
+## Configuration
+
+The system uses environment variables for configuration. See the environment variables section above for required settings.
+
+## Security
+
+- Phone number allowlist for SMS access
+- Email allowlist for email access
+- Secure API key management
+- Input validation and sanitization
+
+## License
+
+Private project - All rights reserved.

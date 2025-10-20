@@ -13,7 +13,7 @@ class SendsCalendarInvitePlugin(PluginBase):
         """Execute the plugin functionality."""
         try:
             # TODO: Implement sends calendar invite
-            logger.info(f"Executing {self.name}: {description}")
+            logger.info(f"Executing {self.name}: {self.description}")
             
             # Placeholder implementation
             result = {

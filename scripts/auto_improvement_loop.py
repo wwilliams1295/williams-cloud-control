@@ -18,7 +18,6 @@ import json
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from config.settings_simple import get_settings
 # Import tools dynamically to avoid import errors
 # from tools.auto_improver import main as auto_improve
 # from tools.self_loop import main as self_loop
@@ -38,7 +37,6 @@ class AutoImprovementLoop:
     """Manages the continuous improvement of the codebase."""
     
     def __init__(self):
-        self.settings = get_settings()
         self.improvement_interval = int(os.getenv('IMPROVE_INTERVAL_MIN', '60')) * 60  # Convert to seconds
         self.last_improvement = None
         self.improvement_history = []
@@ -55,33 +53,22 @@ class AutoImprovementLoop:
                 logger.info("Skipping improvement cycle - cooldown period active")
                 return {"status": "skipped", "reason": "cooldown"}
             
-            # Try to run advanced improvement first
-            logger.info("Attempting advanced improvement...")
-            advanced_result = await self._run_advanced_improvement()
+            # Run auto-improver
+            logger.info("Running auto-improver...")
+            improvement_result = await self._run_auto_improver()
             
-            if advanced_result.get("success", False):
-                logger.info("Advanced improvement successful")
-                result = {
-                    "status": "completed",
-                    "timestamp": datetime.now().isoformat(),
-                    "improvement_type": "advanced",
-                    "result": advanced_result,
-                    "total_improvements": len(self.improvement_history)
-                }
-            else:
-                # Fallback to basic improvement
-                logger.info("Falling back to basic improvement...")
-                improvement_result = await self._run_auto_improver()
-                self_loop_result = await self._run_self_loop()
-                
-                result = {
-                    "status": "completed",
-                    "timestamp": datetime.now().isoformat(),
-                    "improvement_type": "basic",
-                    "improvement_result": improvement_result,
-                    "self_loop_result": self_loop_result,
-                    "total_improvements": len(self.improvement_history)
-                }
+            # Run self-loop for additional improvements
+            logger.info("Running self-loop...")
+            self_loop_result = await self._run_self_loop()
+            
+            # Combine results
+            result = {
+                "status": "completed",
+                "timestamp": datetime.now().isoformat(),
+                "improvement_result": improvement_result,
+                "self_loop_result": self_loop_result,
+                "total_improvements": len(self.improvement_history)
+            }
             
             self.improvement_history.append(result)
             self.last_improvement = datetime.now()
@@ -151,27 +138,6 @@ class AutoImprovementLoop:
             }
         except Exception as e:
             logger.error(f"Error running self-loop: {e}")
-            return {"success": False, "error": str(e)}
-    
-    async def _run_advanced_improvement(self) -> Dict[str, Any]:
-        """Run advanced improvement system."""
-        try:
-            # Try to run the advanced improvement system
-            result = subprocess.run(  # nosec B603
-                [sys.executable, "scripts/advanced_auto_improvement.py", "--once"],
-                capture_output=True,
-                text=True,
-                cwd=Path(__file__).parent.parent
-            )
-            
-            return {
-                "returncode": result.returncode,
-                "stdout": result.stdout,
-                "stderr": result.stderr,
-                "success": result.returncode == 0
-            }
-        except Exception as e:
-            logger.error(f"Error running advanced improvement: {e}")
             return {"success": False, "error": str(e)}
     
     async def run_continuous_loop(self):

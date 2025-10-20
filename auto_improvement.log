@@ -1,0 +1,44 @@
+2025-10-19 21:09:25,945 - sandbox_tester - WARNING - Docker module not available
+2025-10-19 21:09:25,946 - remote_commands - INFO - Processing command from +15613891295: help
+2025-10-19 21:09:25,946 - remote_commands - INFO - Processing command from +15613891295: status
+2025-10-19 21:09:32,400 - sandbox_tester - WARNING - Docker module not available
+2025-10-19 21:09:32,400 - remote_commands - INFO - Processing command from +15613891295: add plugin that sends calendar invite
+2025-10-19 21:09:32,400 - remote_commands - INFO - Adding plugin: sends calendar invite
+2025-10-19 21:09:32,440 - jarvis - ERROR - API Error: No providers configured or available
+2025-10-19 21:09:32,440 - remote_commands - ERROR - Error generating plugin code: router configuration_error: No providers configured or available
+2025-10-19 21:10:46,603 - sandbox_tester - WARNING - Docker module not available
+2025-10-19 21:10:46,604 - remote_commands - INFO - Processing command from +15613891295: add plugin that sends calendar invite
+2025-10-19 21:10:46,604 - remote_commands - INFO - Adding plugin: sends calendar invite
+2025-10-19 21:10:46,629 - routing.provider_registry - WARNING - Failed to register provider llama: __init__() missing 1 required positional argument: 'model'
+2025-10-19 21:10:55,802 - httpx - INFO - HTTP Request: POST https://api.perplexity.ai/chat/completions "HTTP/1.1 200 OK"
+2025-10-19 21:13:54,515 - sandbox_tester - WARNING - Docker module not available
+2025-10-19 21:13:54,515 - remote_commands - INFO - Processing command from +15613891295: add plugin that sends calendar invite
+2025-10-19 21:13:54,515 - remote_commands - INFO - Adding plugin: sends calendar invite
+2025-10-19 21:13:54,537 - routing.provider_registry - WARNING - Failed to register provider llama: __init__() missing 1 required positional argument: 'model'
+2025-10-19 21:14:02,895 - httpx - INFO - HTTP Request: POST https://api.perplexity.ai/chat/completions "HTTP/1.1 200 OK"
+2025-10-19 21:14:38,871 - sandbox_tester - WARNING - Docker module not available
+2025-10-19 21:14:38,871 - remote_commands - INFO - Processing command from +15613891295: add plugin that sends calendar invite
+2025-10-19 21:14:38,871 - remote_commands - INFO - Adding plugin: sends calendar invite
+2025-10-19 21:14:38,893 - routing.provider_registry - WARNING - Failed to register provider llama: __init__() missing 1 required positional argument: 'model'
+2025-10-19 21:14:42,419 - httpx - INFO - HTTP Request: POST https://api.perplexity.ai/chat/completions "HTTP/1.1 200 OK"
+2025-10-19 21:14:42,420 - remote_commands - ERROR - Error generating plugin code: no such group
+2025-10-19 21:14:55,489 - sandbox_tester - WARNING - Docker module not available
+2025-10-19 21:14:55,490 - remote_commands - INFO - Processing command from +15613891295: add plugin that sends calendar invite
+2025-10-19 21:14:55,490 - remote_commands - INFO - Adding plugin: sends calendar invite
+2025-10-19 21:14:55,513 - routing.provider_registry - WARNING - Failed to register provider llama: __init__() missing 1 required positional argument: 'model'
+2025-10-19 21:15:02,799 - httpx - INFO - HTTP Request: POST https://api.perplexity.ai/chat/completions "HTTP/1.1 200 OK"
+2025-10-19 21:15:02,803 - plugins.plugin_manager - INFO - Loaded plugin: sends_calendar_invite
+2025-10-19 21:15:09,324 - sandbox_tester - WARNING - Docker module not available
+2025-10-19 21:15:09,324 - remote_commands - INFO - Processing command from +15613891295: help
+2025-10-19 21:15:09,325 - remote_commands - INFO - Processing command from +15613891295: status
+2025-10-19 21:15:09,325 - remote_commands - INFO - Processing command from +15613891295: add plugin that monitors system performance
+2025-10-19 21:15:09,325 - remote_commands - INFO - Adding plugin: monitors system performance
+2025-10-19 21:15:09,346 - routing.provider_registry - WARNING - Failed to register provider llama: __init__() missing 1 required positional argument: 'model'
+2025-10-19 21:15:17,442 - httpx - INFO - HTTP Request: POST https://api.perplexity.ai/chat/completions "HTTP/1.1 200 OK"
+2025-10-19 21:15:17,445 - plugins.plugin_manager - INFO - Loaded plugin: monitors_system_performance
+2025-10-19 21:15:17,446 - remote_commands - INFO - Processing command from +15613891295: run auto improvement
+2025-10-19 21:15:17,446 - remote_commands - INFO - Running auto-improvement cycle
+2025-10-19 21:15:17,446 - auto_improvement_loop - INFO - Starting improvement cycle...
+2025-10-19 21:15:17,446 - auto_improvement_loop - INFO - Running auto-improver...
+2025-10-19 21:15:17,653 - auto_improvement_loop - INFO - Running self-loop...
+2025-10-19 22:15:17,816 - auto_improvement_loop - INFO - Improvement cycle completed: {'status': 'completed', 'timestamp': '2025-10-19T22:15:17.815409', 'improvement_result': {'returncode': 2, 'stdout': '', 'stderr': 'usage: auto_improver.py [-h] [--dry-run] [--apply]\n                        [--provider {openai,perplexity}]\n                        [--auto-fix {never,pre,post,both}] [--show]\n                        [--no-docker] [--allow-new] [--max-lines MAX_LINES]\n                        [--allow-path ALLOW_PATH]\nauto_improver.py: error: argument --auto-fix: expected one argument\n', 'success': False}, 'self_loop_result': {'returncode': 1, 'stdout': '[auto_improver] running checks in /Users/williamwilliams/jarvis-demo\n[BACKUP] backups/backup_20251019_211517\n[LOOP] ❌ Tests failed. Skipping apply.\n[LOOP] sleep 60m\n[BACKUP] backups/backup_20251019_221517\n', 'stderr': '/Users/williamwilliams/jarvis-demo/venv/bin/python3: No module named ruff\n/Users/williamwilliams/jarvis-demo/venv/bin/python3: No module named ruff\nTraceback (most recent call last):\n  File "/Users/williamwilliams/jarvis-demo/tools/auto_improver.py", line 726, in <module>\n    main()\n  File "/Users/williamwilliams/jarvis-demo/tools/auto_improver.py", line 633, in main\n    if not checks_pass():\n  File "/Users/williamwilliams/jarvis-demo/tools/auto_improver.py", line 126, in checks_pass\n    rc |= subprocess.call(["mypy", *PROJECT_TARGETS], cwd=cwd)\n  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/subprocess.py", line 349, in call\n    with Popen(*popenargs, **kwargs) as p:\n  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/subprocess.py", line 951, in __init__\n    self._execute_child(args, executable, preexec_fn, close_fds,\n  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/subprocess.py", line 1821, in _execute_child\n    raise child_exception_type(errno_num, err_msg, err_filename)\nFileNotFoundError: [Errno 2] No such file or directory: \'mypy\'\nTraceback (most recent call last):\n  File "/Users/williamwilliams/jarvis-demo/tools/self_loop.py", line 43, in <module>\n    loop_once()\n  File "/Users/williamwilliams/jarvis-demo/tools/self_loop.py", line 30, in loop_once\n    rc = subprocess.call([sys.executable, str(IMPROVER), "--apply"], cwd=str(REPO))  # nosec B603\n  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/subprocess.py", line 349, in call\n    with Popen(*popenargs, **kwargs) as p:\n  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/subprocess.py", line 951, in __init__\n    self._execute_child(args, executable, preexec_fn, close_fds,\n  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/subprocess.py", line 1821, in _execute_child\n    raise child_exception_type(errno_num, err_msg, err_filename)\nFileNotFoundError: [Errno 2] No such file or directory: \'/Users/williamwilliams/jarvis-demo/venv/bin/python3\'\n', 'success': False}, 'total_improvements': 0}

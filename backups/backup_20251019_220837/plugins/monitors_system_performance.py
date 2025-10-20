@@ -1,25 +1,25 @@
 from plugins.plugin_manager import PluginBase
 import logging
 
-class SendsCalendarInvitePlugin(PluginBase):
-    """Plugin: sends calendar invite"""
+class MonitorsSystemPerformancePlugin(PluginBase):
+    """Plugin: monitors system performance"""
     
     def __init__(self, config=None):
         super().__init__(config)
-        self.name = "sends_calendar_invite"
-        self.description = "sends calendar invite"
+        self.name = "monitors_system_performance"
+        self.description = "monitors system performance"
     
     async def execute(self, context):
         """Execute the plugin functionality."""
         try:
-            # TODO: Implement sends calendar invite
+            # TODO: Implement monitors system performance
             logger.info(f"Executing {self.name}: {description}")
             
             # Placeholder implementation
             result = {
                 "success": True,
                 "message": "Plugin executed successfully",
-                "description": "sends calendar invite",
+                "description": "monitors system performance",
                 "context": context
             }
             
@@ -33,7 +33,7 @@ class SendsCalendarInvitePlugin(PluginBase):
             }
     
     def get_description(self):
-        return "sends calendar invite"
+        return "monitors system performance"
     
     def get_requirements(self):
         return []

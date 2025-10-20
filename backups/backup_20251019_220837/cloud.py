@@ -52,8 +52,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 
-# LLM router (your existing)
-from agent import superchat
+# LLM router (updated to use new modular system)
+from agent_v2 import superchat
 
 # Optional (SEC / data)
 import pandas as pd
@@ -967,7 +967,7 @@ def try_tool_plan(body: str) -> Optional[str]:
 
 
 # ==================== CORE PROCESSOR =================
-def process_message(sender_id: str, body: str, channel: str = "sms") -> str:
+async def process_message(sender_id: str, body: str, channel: str = "sms") -> str:
     if os.getenv("DEBUG_LOG", "0") == "1":
         print(f"[PROC] channel={channel} sender_in={sender_id} body={body[:120]!r}")
 
@@ -1157,6 +1157,45 @@ def process_message(sender_id: str, body: str, channel: str = "sms") -> str:
         remember(cleaned, ai_reply)
         return finish(ai_reply)
 
+    # Remote Commands (NEW: System control via SMS/email)
+    try:
+        from remote_commands import process_remote_command
+        command_result = await process_remote_command(s, sender_id)
+        if command_result.get("success") and command_result.get("command_type") != "unknown":
+            remember(s, command_result["response"])
+            return finish(command_result["response"])
+    except Exception as e:
+        if os.getenv("DEBUG_LOG", "0") == "1":
+            print(f"[REMOTE_CMD] Error: {e}")
+
+    # AI with Plugin Access (NEW: AI can use plugins for regular requests)
+    try:
+        from ai_plugin_integration import ai_plugin_integration
+        # Check if this is a request that could benefit from plugins
+        if any(keyword in lower for keyword in ["calendar", "invite", "meeting", "schedule", "monitor", "performance", "system"]):
+            plugin_response = await ai_plugin_integration.ai_with_plugin_access(s)
+            remember(s, plugin_response)
+            return finish(plugin_response)
+    except Exception as e:
+        if os.getenv("DEBUG_LOG", "0") == "1":
+            print(f"[AI_PLUGIN] Error: {e}")
+
+    # File Management (NEW: Handle file operations like PPT, PDF, Excel)
+    try:
+        from file_manager import file_manager
+        # Check if this is a file-related request
+        if any(keyword in lower for keyword in ["create ppt", "make presentation", "edit ppt", "powerpoint", "excel", "spreadsheet", "10-k", "10k", "sec filing", "send pdf", "email pdf"]):
+            file_result = await file_manager.process_file_request(s, sender_id)
+            if file_result.get("success"):
+                remember(s, file_result["message"])
+                return finish(file_result["message"])
+            else:
+                remember(s, file_result["message"])
+                return finish(file_result["message"])
+    except Exception as e:
+        if os.getenv("DEBUG_LOG", "0") == "1":
+            print(f"[FILE_MGR] Error: {e}")
+
     # Excel
     if lower.startswith("excel"):
         try:
@@ -1267,7 +1306,7 @@ async def sms_in(req: Request):
         if os.getenv("DEBUG_LOG", "0") == "1":
             print("[TWILIO] Cleaned payload empty; using 'ping'")
         body_clean = "ping"
-    text_reply = process_message(sender, body_clean, channel="sms")
+    text_reply = await process_message(sender, body_clean, channel="sms")
     text_reply = make_gv_friendly(text_reply)
     return twiml(text_reply)
 
@@ -1343,7 +1382,7 @@ async def email_inbound(req: Request):
         if os.getenv("DEBUG_LOG", "0") == "1":
             print(f"[GV] Processing SMS from {sms_sender} … {clean_text[:80]!r}")
 
-        reply = process_message(sms_sender, clean_text, channel="sms")
+        reply = await process_message(sms_sender, clean_text, channel="sms")
         if os.getenv("DEBUG_LOG", "0") == "1":
             print(f"[GV] sms_sender={sms_sender} reply_len={len(reply)}")
 
@@ -1382,7 +1421,7 @@ async def email_inbound(req: Request):
         return {"ok": True, "gv": True}
 
     # Normal email path
-    reply2 = process_message(sender_addr, command_text, channel="email")
+    reply2 = await process_message(sender_addr, command_text, channel="email")
     attachments2 = _extract_paths(reply2)
     sent = send_email(
         sender_addr,
@@ -1481,7 +1520,7 @@ def _gmail_send_with_attachments(
 
 
 # ==================== GV POLLING LOOP =================
-def run_gmail_polling_once() -> None:
+async def run_gmail_polling_once() -> None:
     """
     Reads unread GV-SMS emails, normalizes sender phone, routes through process_message(),
     emails reply back (GV converts to SMS), marks message read.
@@ -1540,9 +1579,9 @@ def run_gmail_polling_once() -> None:
                     f"[GV] Processing SMS from {sms_sender} … {clean_incoming[:80]!r}"
                 )
 
-            reply_text = process_message(sms_sender, clean_incoming, channel="sms")
+            reply_text = await process_message(sms_sender, clean_incoming, channel="sms")
         else:
-            reply_text = process_message(to_addr, text or subj or "", channel="email")
+            reply_text = await process_message(to_addr, text or subj or "", channel="email")
 
         attachments = _extract_paths(reply_text)
         if _is_gv_gateway(to_addr):
@@ -1578,11 +1617,11 @@ def run_gmail_polling_once() -> None:
         _gmail_mark_read(svc, m["id"])
 
 
-def run_gmail_polling_loop() -> None:
+async def run_gmail_polling_loop() -> None:
     print(f"[GV] Polling Gmail every {POLL_SECONDS}s (query: {GMAIL_QUERY})")
     while True:
         try:
-            run_gmail_polling_once()
+            await run_gmail_polling_once()
         except Exception as e:
             print("Gmail polling error:", e)
         time.sleep(POLL_SECONDS)
@@ -1601,9 +1640,9 @@ def gmail_whoami() -> Dict[str, Any]:
 
 # ==================== DEBUG: trigger one poll now ===
 @app.post("/debug/gmail_once")
-def gmail_once() -> Dict[str, Any]:
+async def gmail_once() -> Dict[str, Any]:
     try:
-        run_gmail_polling_once()
+        await run_gmail_polling_once()
         return {"ok": True}
     except Exception as e:
         return {"ok": False, "error": str(e)}
@@ -1661,7 +1700,7 @@ async def debug_simulate_gv(
     if looks_like_admin_blob(clean_incoming):
         clean_incoming = "ping"
 
-    reply = process_message(str(phone), clean_incoming, channel="sms")
+    reply = await process_message(str(phone), clean_incoming, channel="sms")
     reply = make_gv_friendly(_replace_paths_with_links(reply, _extract_paths(reply)))
 
     return {
@@ -1708,8 +1747,15 @@ if __name__ == "__main__":
     # Run FastAPI + GV poller together for local dev
     import uvicorn
 
-    t = threading.Thread(target=run_gmail_polling_loop, daemon=True)
+    # Start Gmail polling in background thread
+    def run_polling():
+        asyncio.run(run_gmail_polling_loop())
+    
+    t = threading.Thread(target=run_polling, daemon=True)
     t.start()
+    
+    # Start FastAPI server
+    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
 # ==================== SEC / EDGAR HELPERS ====================

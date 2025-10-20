@@ -214,21 +214,35 @@ def extract_phone_from_gv_headers(
 ) -> Optional[str]:
     """
     GV local-part like: 19177194526.15613891295.CRmvhhlGR7
-    Prefer a token whose last10 matches ALLOWED_NUMBERS_LAST10.
+    Extract sender's phone number from subject line first, then from email headers.
     """
     headers = headers or {}
     subject = subject or ""
     body = body or ""
 
+    # First, try to extract phone number from subject line
+    # Subject format: "New text message from (561) 389-1295"
+    subject_match = re.search(r'\((\d{3})\)\s*(\d{3})-(\d{4})', subject)
+    if subject_match:
+        area_code, prefix, number = subject_match.groups()
+        phone_str = f"+1{area_code}{prefix}{number}"
+        normalized = normalize_phone(phone_str)
+        if normalized:
+            return normalized
+
     def pick_from_local(local: str) -> Optional[str]:
         if not local:
             return None
         tokens = [t for t in local.split(".") if t]
+        # First, look for sender numbers (not the GV number)
         for tok in tokens:
             n = normalize_phone(tok)
             if not n:
                 continue
             f10 = last10_digits(n)
+            # Skip if this is the GV number itself
+            if f10 == "9177194526":
+                continue
             if f10 and f10 in ALLOWED_NUMBERS_LAST10:
                 return n
         for tok in tokens:
